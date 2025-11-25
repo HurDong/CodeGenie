@@ -93,6 +93,17 @@ npm run dev
 ```
 브라우저에서 `http://localhost:5173`으로 접속하여 **CodeGenie**를 만나보세요! ✨
 
+### 4. 백엔드 및 인프라 실행 (Docker) 🐳
+백엔드(Spring Boot)와 Redis는 Docker Compose를 통해 쉽게 실행할 수 있습니다.
+
+```bash
+docker-compose up -d --build
+```
+- **Backend API**: `http://localhost:8080`
+- **Redis**: `localhost:6379`
+
+프론트엔드 개발 서버(`npm run dev`)는 자동으로 `/api` 요청을 로컬 Docker 백엔드로 프록시합니다.
+
 ---
 
 ## 📝 라이선스 (License)
