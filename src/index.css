@@ -42,7 +42,7 @@ body {
   position: fixed;
   top: 0;
   width: 100%;
-  padding: 1rem 5%;
+  padding: 0.5rem 5%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -59,7 +59,36 @@ body {
 
 .logo {
   font-weight: 800;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
+  color: #0f172a;
+  /* Dark Navy for contrast on white */
+  letter-spacing: 1px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo span {
+  color: var(--accent-color);
+}
+
+/* Logo Image - Clean on Light Background */
+.logo-img {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+  margin-right: 0.5rem;
+  transition: transform 0.3s ease;
+}
+
+.logo-img:hover {
+  transform: scale(1.05);
+}
+
+.nav-container {
+  display: flex;
+  align-items: center;
   gap: 2rem;
 }
 
