@@ -36,7 +36,7 @@
 
 ### 3.1. Structure (구조)
 ```text
-<Emoji> <Title (English)>
+<Emoji> <Type>: <Title (English)>
 
 <Description (Korean)>
 
@@ -44,7 +44,7 @@
 ```
 
 ### 3.2. Title Rules (English)
-- **Format**: `Emoji` + `Space` + `Verb (Present Tense)` + `Subject`
+- **Format**: `Emoji` + `Space` + `Type` + `:` + `Space` + `Title`
 - **Case**: Start with a **Capital letter**.
 - **Length**: Keep it under **50 characters**.
 - **No Period**: Do not end with a period `.`.
@@ -60,22 +60,22 @@
 ### 3.4. Emoji & Type Guide
 | Emoji | Type | Description | Example |
 | :--- | :--- | :--- | :--- |
-| ✨ | `feat` | 새로운 기능 추가 | `✨ Add user login flow` |
-| 🐛 | `fix` | 버그 수정 | `🐛 Fix navigation bar overlap` |
-| 💄 | `style` | 코드 포맷팅, 세미콜론 누락 등 (비즈니스 로직 변경 없음) | `💄 Update button hover effects` |
-| ♻️ | `refactor` | 코드 리팩토링 (기능 변경 없음) | `♻️ Refactor auth state management` |
-| 📝 | `docs` | 문서 수정 (README, Wiki 등) | `📝 Update API documentation` |
-| 🚀 | `perf` | 성능 개선 | `🚀 Improve image loading speed` |
-| 🧪 | `test` | 테스트 코드 추가/수정 | `🧪 Add unit tests for Hero component` |
-| 🔧 | `chore` | 빌드, 패키지 매니저 설정 등 | `🔧 Update vite.config.js` |
-| 📦 | `build` | 배포 스크립트, 의존성 변경 | `📦 Upgrade react to v19` |
-| 🚑 | `hotfix` | 긴급 수정 | `🚑 Hotfix production crash` |
+| ✨ | `feat` | 새로운 기능 추가 | `✨ feat: Add user login flow` |
+| 🐛 | `fix` | 버그 수정 | `🐛 fix: Fix navigation bar overlap` |
+| 💄 | `style` | 코드 포맷팅, 세미콜론 누락 등 (비즈니스 로직 변경 없음) | `💄 style: Update button hover effects` |
+| ♻️ | `refactor` | 코드 리팩토링 (기능 변경 없음) | `♻️ refactor: Refactor auth state management` |
+| 📝 | `docs` | 문서 수정 (README, Wiki 등) | `📝 docs: Update API documentation` |
+| 🚀 | `perf` | 성능 개선 | `🚀 perf: Improve image loading speed` |
+| 🧪 | `test` | 테스트 코드 추가/수정 | `🧪 test: Add unit tests for Hero component` |
+| 🔧 | `chore` | 빌드, 패키지 매니저 설정 등 | `🔧 chore: Update vite.config.js` |
+| 📦 | `build` | 배포 스크립트, 의존성 변경 | `📦 build: Upgrade react to v19` |
+| 🚑 | `hotfix` | 긴급 수정 | `🚑 hotfix: Hotfix production crash` |
 
 ### 3.5. Description Templates (상황별 예시)
 
 **Case 1: 기능 추가 (Feat)**
 ```text
-✨ Add dark mode toggle
+✨ feat: Add dark mode toggle
 
 사용자가 테마를 선택할 수 있도록 다크 모드 토글 기능을 추가했습니다.
 - 로컬 스토리지에 사용자 선호 테마 저장
@@ -85,7 +85,7 @@
 
 **Case 2: 버그 수정 (Fix)**
 ```text
-🐛 Fix login button not responding
+🐛 fix: Fix login button not responding
 
 모바일 환경에서 로그인 버튼이 터치되지 않는 문제를 수정했습니다.
 - z-index 값이 낮아 다른 요소에 가려지던 문제 해결 (z-index: 10 -> 100)
@@ -94,7 +94,7 @@
 
 **Case 3: 리팩토링 (Refactor)**
 ```text
-♻️ Refactor user state management
+♻️ refactor: Refactor user state management
 
 Redux에서 Recoil로 상태 관리 라이브러리를 교체했습니다.
 - 불필요한 보일러플레이트 코드 제거
