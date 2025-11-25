@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: codegenie-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - redis
+    networks:
+      - codegenie-network
+
+  redis:
+    image: redis:alpine
+    container_name: codegenie-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - codegenie-network
+
+networks:
+  codegenie-network:
+    driver: bridge

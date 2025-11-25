@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: codegenie-backend
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+  session:
+    store-type: redis
+    redis:
+      namespace: spring:session
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    com.codetest: DEBUG
