@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Java / Spring Boot / Gradle
+.gradle/
+backend/.gradle/
+build/
+out/
+bin/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
