@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeTest Agent - 사고력을 키우는 AI 코딩 멘토</title>
+    <meta name="description" content="단순 정답이 아닌 깊이 있는 이해와 사고 확장을 돕는 AI 코딩 테스트 에이전트. 반례 생성, 단계별 풀이 가이드, 약점 분석까지.">
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="logo">
+            <img src="assets/logo.png" alt="CodeTest Agent Logo" class="logo-img">
+            CodeTest<span>Agent</span>
+        </div>
+
+        <div class="nav-container">
+            <ul class="nav-links">
+                <li><a href="#hero">홈</a></li>
+                <li><a href="#features">핵심 기능</a></li>
+                <li><a href="#process">작동 원리</a></li>
+                <li><a href="#demo">체험하기</a></li>
+            </ul>
+
+            <div class="lang-toggle" id="langToggle">
+                <span class="active">KR</span>
+                <div class="separator"></div>
+                <span>EN</span>
+            </div>
+        </div>
+
+        <div class="menu-toggle">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+    </nav>
+
+    <main>
+        <section id="hero" class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    정답만 찾는 코딩은<br>
+                    <span>이제 그만.</span>
+                </h1>
+                <p class="hero-subtitle">
+                    문제를 깊이 이해하고 사고를 확장하는 경험.<br>
+                    CodeTest Agent는 당신의 코드를 분석하고, 숨겨진 반례를 찾아내며,<br>
+                    스스로 답을 찾을 수 있도록 단계별로 멘토링합니다.
+                </p>
+                <button class="cta-button"
+                    onclick="document.getElementById('demo').scrollIntoView({behavior: 'smooth'})">무료로 체험하기</button>
+            </div>
+            <div class="hero-visual">
+                <!-- Glowing Orbs -->
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+            </div>
+        </section>
+
+        <section id="features" class="features-section">
+            <h2 class="section-title">왜 <span>CodeTest Agent</span>인가요?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="icon">🧠</div>
+                    <h3>심층 문제 이해</h3>
+                    <p>단순 텍스트 매칭이 아닙니다. 문제의 핵심 목표, 입력 변수, 제약 조건을 구조적으로 파악하여 정확한 가이드를 제공합니다.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">⚡</div>
+                    <h3>반례 생성 모드</h3>
+                    <p>내 코드가 왜 틀렸는지 모르겠나요? 경계값, 히든 케이스, 논리적 허점을 파고드는 날카로운 반례를 제시합니다.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">🗺️</div>
+                    <h3>단계별 솔루션</h3>
+                    <p>바로 정답을 알려주지 않습니다. 문제 분해부터 자료구조 선택, 알고리즘 설계까지 소크라테스식 문답으로 사고력을 키워줍니다.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon">🛡️</div>
+                    <h3>약점 분석</h3>
+                    <p>조건문 누락, Off-by-one 에러 등 사용자의 코드 패턴을 분석하여 자주 실수하는 약점을 짚어줍니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="process" class="process-section">
+            <h2 class="section-title">어떻게 <span>작동</span>하나요?</h2>
+            <div class="process-steps">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>문제 입력</h3>
+                    <p>문제 텍스트나 URL을 입력하면 AI가 핵심 정보를 파싱합니다.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>이해 검증</h3>
+                    <p>AI가 파악한 문제의 목표와 제약조건을 요약해 보여주고 확인받습니다.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>모드 선택</h3>
+                    <p>반례를 찾을지(Counterexample), 풀이 힌트를 얻을지(Solution) 선택합니다.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h3>멘토링 실행</h3>
+                    <p>선택한 모드에 맞춰 최적화된 피드백과 가이드를 제공합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="demo" class="demo-section">
+            <h2 class="section-title">직접 <span>경험</span>해보세요</h2>
+            <div class="demo-container">
+                <div class="demo-ide">
+                    <div class="ide-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="filename">Solution.java</span>
+                    </div>
+                    <div class="ide-body">
+                        <div class="line-numbers">
+                            1<br>2<br>3<br>4<br>5<br>6<br>7<br>8
+                        </div>
+                        <pre class="code-content"><code><span class="keyword">public</span> <span class="keyword">int</span> <span class="function">solution</span>(<span class="keyword">int</span> n) {
+    <span class="comment">// 1부터 n까지의 합을 반환</span>
+    <span class="keyword">int</span> sum = 0;
+    <span class="keyword">for</span> (<span class="keyword">int</span> i = 1; i < n; i++) {
+        sum += i;
+    }
+    <span class="keyword">return</span> sum;
+}</code></pre>
+                        <div class="error-highlight"></div>
+                    </div>
+                </div>
+
+                <div class="demo-chat">
+                    <div class="chat-header">
+                        <div class="agent-profile">
+                            <div class="agent-avatar">🤖</div>
+                            <div class="agent-info">
+                                <div class="name">CodeTest Agent</div>
+                                <div class="status">Online</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-body" id="chatBody">
+                        <div class="message agent">
+                            안녕하세요! 코드를 분석해 드릴까요? "분석 시작하기" 버튼을 눌러주세요.
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <button id="runDemoBtn" class="run-demo-btn">
+                            <span class="icon">▶</span> 분석 시작하기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 CodeTest Agent. Designed for Growth.</p>
+    </footer>
+
+    <!-- GSAP Core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <!-- GSAP ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
