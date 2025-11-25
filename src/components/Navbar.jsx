@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 
 const Navbar = () => {
@@ -6,6 +7,7 @@ const Navbar = () => {
     const [lang, setLang] = useState('KR');
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const loginRef = useRef(null);
+    const navigate = useNavigate();
 
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [email, setEmail] = useState('');
@@ -37,11 +39,8 @@ const Navbar = () => {
             setIsLoggedIn(true);
             setIsLoginOpen(false);
             
-            // Smooth scroll to the AI Mentoring section
-            const demoSection = document.getElementById('demo');
-            if (demoSection) {
-                demoSection.scrollIntoView({ behavior: 'smooth' });
-            }
+            // Redirect to AI Mentoring page upon login
+            navigate('/ai-mentoring');
         } else {
             alert('이메일 또는 비밀번호가 올바르지 않습니다.\n(Hint: test@code.genie / 1234)');
         }
@@ -52,7 +51,7 @@ const Navbar = () => {
         localStorage.removeItem('isLoggedIn');
         setIsLoggedIn(false);
         setIsMenuOpen(false);
-        // Optional: Scroll to top or stay put
+        navigate('/');
     };
 
     useEffect(() => {
@@ -66,17 +65,17 @@ const Navbar = () => {
 
     return (
         <nav className="navbar">
-            <div className="logo">
-                <img src="/assets/logo.png" alt="CodeGenie Logo" className="logo-img" />
+            <div className="logo" onClick={() => navigate('/')} style={{cursor: 'pointer'}}>
+                <img src={`${import.meta.env.BASE_URL}assets/logo.png`} alt="CodeGenie Logo" className="logo-img" />
                 <div className="brand-name">Code<span>Genie</span></div>
             </div>
 
             <div className={`nav-container ${isMenuOpen ? 'active' : ''}`}>
                 <ul className="nav-links">
-                    <li><a href="#demo" onClick={() => setIsMenuOpen(false)}>AI 멘토링</a></li>
+                    <li><Link to="/ai-mentoring" onClick={() => setIsMenuOpen(false)}>AI 멘토링</Link></li>
                     {isLoggedIn ? (
                         <>
-                            <li><a href="#" onClick={() => setIsMenuOpen(false)}>대화 기록</a></li>
+                            <li><Link to="/history" onClick={() => setIsMenuOpen(false)}>대화 기록</Link></li>
                             <li><a href="#" onClick={handleLogout}>로그아웃</a></li>
                         </>
                     ) : (
