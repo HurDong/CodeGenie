@@ -1,16 +1,19 @@
 import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Features from './components/Features';
 import Process from './components/Process';
 import Demo from './components/Demo';
 import Footer from './components/Footer';
+import AiMentoringPage from './pages/AiMentoringPage';
+import HistoryPage from './pages/HistoryPage';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-function App() {
+const LandingPage = () => {
   useEffect(() => {
     // Enhanced scroll animations for section transitions with smooth, fluid motion
     const sections = gsap.utils.toArray('section');
@@ -62,7 +65,7 @@ function App() {
   }, []);
 
   return (
-    <div className="App">
+    <>
       <Navbar />
       <main>
         <Hero />
@@ -71,7 +74,21 @@ function App() {
         <Demo />
       </main>
       <Footer />
-    </div>
+    </>
+  );
+};
+
+function App() {
+  return (
+    <Router basename="/CodeGenie">
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/ai-mentoring" element={<AiMentoringPage />} />
+          <Route path="/history" element={<HistoryPage />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
