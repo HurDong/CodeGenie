@@ -80,7 +80,7 @@ const LandingPage = () => {
 
 function App() {
   return (
-    <Router basename="/CodeGenie">
+    <Router basename={import.meta.env.BASE_URL}>
       <div className="App">
         <Routes>
           <Route path="/" element={<LandingPage />} />
