@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { api } from '../api/client';
 
 const HistoryPage = () => {
   const navigate = useNavigate();
@@ -8,107 +9,19 @@ const HistoryPage = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
 
   // Mock conversation history data - 알고리즘 문제 중심
-  const [conversations] = useState([
-    {
-      id: 1,
-      title: '동적 프로그래밍 - 피보나치',
-      date: new Date('2025-11-25T14:30:00'),
-      category: 'dp',
-      messageCount: 15,
-      duration: '25분',
-      topics: ['동적 프로그래밍'],
-      lastMessage: '동적 프로그래밍의 핵심은 중복 계산을 제거하는 것입니다...',
-      status: 'resolved'
-    },
-    {
-      id: 2,
-      title: 'DFS/BFS - 미로 탈출',
-      date: new Date('2025-11-25T13:15:00'),
-      category: 'graph',
-      messageCount: 18,
-      duration: '32분',
-      topics: ['그래프/탐색'],
-      lastMessage: 'BFS는 최단 경로를 찾는 데 유용합니다. 큐를 활용하여...',
-      status: 'ongoing'
-    },
-    {
-      id: 3,
-      title: '그리디 알고리즘 - 동전 거스름돈',
-      date: new Date('2025-11-25T11:20:00'),
-      category: 'greedy',
-      messageCount: 12,
-      duration: '18분',
-      topics: ['그리디'],
-      lastMessage: '그리디가 항상 최적해를 보장하는지 증명이 필요합니다...',
-      status: 'resolved'
-    },
-    {
-      id: 4,
-      title: '이분 탐색 - 정렬된 배열',
-      date: new Date('2025-11-24T16:45:00'),
-      category: 'search',
-      messageCount: 10,
-      duration: '15분',
-      topics: ['이분 탐색'],
-      lastMessage: '이분 탐색의 종료 조건과 경계값 처리가 핵심입니다...',
-      status: 'resolved'
-    },
-    {
-      id: 5,
-      title: '정렬 알고리즘 비교',
-      date: new Date('2025-11-24T10:30:00'),
-      category: 'sort',
-      messageCount: 22,
-      duration: '35분',
-      topics: ['정렬'],
-      lastMessage: '각 정렬 알고리즘의 장단점과 사용 시나리오를 이해했습니다...',
-      status: 'resolved'
-    },
-    {
-      id: 6,
-      title: '투 포인터 - 부분합 구하기',
-      date: new Date('2025-11-23T15:00:00'),
-      category: 'two-pointer',
-      messageCount: 14,
-      duration: '22분',
-      topics: ['투 포인터'],
-      lastMessage: '투 포인터 기법으로 O(n²)을 O(n)으로 개선했습니다...',
-      status: 'resolved'
-    },
-    {
-      id: 7,
-      title: '백트래킹 - N-Queen 문제',
-      date: new Date('2025-11-22T14:00:00'),
-      category: 'backtracking',
-      messageCount: 28,
-      duration: '45분',
-      topics: ['백트래킹'],
-      lastMessage: '가지치기를 통해 불필요한 탐색을 줄이는 것이 핵심입니다...',
-      status: 'resolved'
-    },
-    {
-      id: 8,
-      title: '구현 - 시뮬레이션 문제',
-      date: new Date('2025-11-21T16:30:00'),
-      category: 'implementation',
-      messageCount: 15,
-      duration: '28분',
-      topics: ['구현'],
-      lastMessage: '복잡한 조건을 차근차근 구현하는 것이 중요합니다...',
-      status: 'resolved'
-    },
-    {
-      id: 9,
-      title: '기타 - 문제 풀이 전략',
-      date: new Date('2025-11-20T11:00:00'),
-      category: 'etc',
-      messageCount: 8,
-      duration: '12분',
-      topics: ['기타'],
-      lastMessage: '알고리즘 문제를 효과적으로 접근하는 방법에 대해 논의했습니다...',
-      status: 'ongoing'
-    }
-  ]);
+  const [conversations, setConversations] = useState([]);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const data = await api.getHistory();
+        setConversations(data);
+      } catch (error) {
+        console.error("Failed to fetch history:", error);
+      }
+    };
+    fetchHistory();
+  }, []);
 
   const categories = {
     all: { label: '전체', icon: '📚', color: '#6366f1' },
