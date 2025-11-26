@@ -9,6 +9,7 @@ services:
     environment:
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_DATA_MONGODB_HOST=mongodb
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     depends_on:
       - redis
@@ -23,6 +24,24 @@ services:
     networks:
       - codegenie-network
 
+    networks:
+      - codegenie-network
+
+  mongodb:
+    image: mongo:latest
+    container_name: codegenie-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=codegenie
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - codegenie-network
+
 networks:
   codegenie-network:
     driver: bridge
+
+volumes:
+  mongodb_data:
