@@ -23,19 +23,23 @@ Initiates a new mentoring session with a specific mode and optional context.
 **Response (200 OK):**
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "title": "새로운 대화 (SOLUTION)",
-  "mode": "SOLUTION",
-  "status": "ongoing",
-  "messages": [
-    {
-      "role": "assistant",
-      "content": "안녕하세요! SOLUTION 모드로 도와드리겠습니다.",
-      "timestamp": "2023-11-27T10:00:00"
-    }
-  ],
-  "createdAt": "2023-11-27T10:00:00",
-  "updatedAt": "2023-11-27T10:00:00"
+  "status": "success",
+  "message": "대화가 시작되었습니다.",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "title": "새로운 대화 (SOLUTION)",
+    "mode": "SOLUTION",
+    "status": "ongoing",
+    "messages": [
+      {
+        "role": "assistant",
+        "content": "안녕하세요! SOLUTION 모드로 도와드리겠습니다.",
+        "timestamp": "2023-11-27T10:00:00"
+      }
+    ],
+    "createdAt": "2023-11-27T10:00:00",
+    "updatedAt": "2023-11-27T10:00:00"
+  }
 }
 ```
 
@@ -60,9 +64,12 @@ Sends a user message to an existing conversation and receives an AI response.
 Returns the AI's response message.
 ```json
 {
-  "role": "assistant",
-  "content": "이 알고리즘의 시간 복잡도는 O(N)입니다.",
-  "timestamp": "2023-11-27T10:05:00"
+  "status": "success",
+  "data": {
+    "role": "assistant",
+    "content": "이 알고리즘의 시간 복잡도는 O(N)입니다.",
+    "timestamp": "2023-11-27T10:05:00"
+  }
 }
 ```
 
@@ -76,17 +83,20 @@ Retrieves a list of all past conversation sessions, sorted by latest update.
 
 **Response (200 OK):**
 ```json
-[
-  {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "title": "알고리즘 복잡도 분석",
-    "mode": "SOLUTION",
-    "status": "resolved",
-    "updatedAt": "2023-11-27T12:00:00",
-    "messages": [...] // May contain full or partial messages depending on implementation
-  },
-  ...
-]
+{
+  "status": "success",
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "title": "알고리즘 복잡도 분석",
+      "mode": "SOLUTION",
+      "status": "resolved",
+      "updatedAt": "2023-11-27T12:00:00",
+      "messages": [...] 
+    },
+    ...
+  ]
+}
 ```
 
 ---
@@ -103,23 +113,26 @@ Retrieves the full details and message history of a specific conversation.
 **Response (200 OK):**
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "title": "알고리즘 복잡도 분석",
-  "mode": "SOLUTION",
-  "problemText": "...",
-  "userCode": "...",
-  "messages": [
-    {
-      "role": "assistant",
-      "content": "...",
-      "timestamp": "..."
-    },
-    {
-      "role": "user",
-      "content": "...",
-      "timestamp": "..."
-    }
-  ]
+  "status": "success",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "title": "알고리즘 복잡도 분석",
+    "mode": "SOLUTION",
+    "problemText": "...",
+    "userCode": "...",
+    "messages": [
+      {
+        "role": "assistant",
+        "content": "...",
+        "timestamp": "..."
+      },
+      {
+        "role": "user",
+        "content": "...",
+        "timestamp": "..."
+      }
+    ]
+  }
 }
 ```
 

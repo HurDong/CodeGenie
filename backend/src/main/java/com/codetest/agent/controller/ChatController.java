@@ -2,6 +2,7 @@ package com.codetest.agent.controller;
 
 import com.codetest.agent.domain.Conversation;
 import com.codetest.agent.domain.Message;
+import com.codetest.agent.dto.ApiResponse;
 import com.codetest.agent.service.ChatService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -19,23 +20,28 @@ public class ChatController {
     private final ChatService chatService;
 
     @PostMapping("/chat/start")
-    public Conversation startChat(@RequestBody StartChatRequest request) {
-        return chatService.startChat(request.getMode(), request.getProblemText(), request.getUserCode());
+    public ApiResponse<Conversation> startChat(@RequestBody StartChatRequest request) {
+        Conversation conversation = chatService.startChat(request.getMode(), request.getProblemText(),
+                request.getUserCode());
+        return ApiResponse.success(conversation, "대화가 시작되었습니다.");
     }
 
     @PostMapping("/chat/message")
-    public Message sendMessage(@RequestBody SendMessageRequest request) {
-        return chatService.sendMessage(request.getConversationId(), request.getContent());
+    public ApiResponse<Message> sendMessage(@RequestBody SendMessageRequest request) {
+        Message message = chatService.sendMessage(request.getConversationId(), request.getContent());
+        return ApiResponse.success(message);
     }
 
     @GetMapping("/history")
-    public List<Conversation> getHistory() {
-        return chatService.getAllConversations();
+    public ApiResponse<List<Conversation>> getHistory() {
+        List<Conversation> history = chatService.getAllConversations();
+        return ApiResponse.success(history);
     }
 
     @GetMapping("/history/{id}")
-    public Conversation getConversation(@PathVariable String id) {
-        return chatService.getConversation(id);
+    public ApiResponse<Conversation> getConversation(@PathVariable String id) {
+        Conversation conversation = chatService.getConversation(id);
+        return ApiResponse.success(conversation);
     }
 
     @Data

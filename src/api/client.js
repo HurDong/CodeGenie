@@ -9,7 +9,9 @@ export const api = {
       body: JSON.stringify({ mode, problemText, userCode }),
     });
     if (!response.ok) throw new Error('Failed to start chat');
-    return response.json();
+    const result = await response.json();
+    if (result.status === 'error') throw new Error(result.message);
+    return result.data;
   },
 
   sendMessage: async (conversationId, content) => {
@@ -19,19 +21,25 @@ export const api = {
       body: JSON.stringify({ conversationId, content }),
     });
     if (!response.ok) throw new Error('Failed to send message');
-    return response.json();
+    const result = await response.json();
+    if (result.status === 'error') throw new Error(result.message);
+    return result.data;
   },
 
   // History
   getHistory: async () => {
     const response = await fetch(`${API_BASE_URL}/history`);
     if (!response.ok) throw new Error('Failed to fetch history');
-    return response.json();
+    const result = await response.json();
+    if (result.status === 'error') throw new Error(result.message);
+    return result.data;
   },
 
   getConversation: async (id) => {
     const response = await fetch(`${API_BASE_URL}/history/${id}`);
     if (!response.ok) throw new Error('Failed to fetch conversation');
-    return response.json();
+    const result = await response.json();
+    if (result.status === 'error') throw new Error(result.message);
+    return result.data;
   },
 };
