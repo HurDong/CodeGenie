@@ -38,7 +38,7 @@ const Navbar = () => {
             localStorage.setItem('isLoggedIn', 'true');
             setIsLoggedIn(true);
             setIsLoginOpen(false);
-            
+
             // Redirect to AI Mentoring page upon login
             navigate('/ai-mentoring');
         } else {
@@ -63,9 +63,32 @@ const Navbar = () => {
         }
     }, [isLoginOpen]);
 
+    // Close login dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (loginRef.current && !loginRef.current.contains(event.target)) {
+                // Check if the click target is not the login link itself
+                const loginLink = event.target.closest('a[href="#"]');
+                if (!loginLink || loginLink.textContent !== '로그인') {
+                    setIsLoginOpen(false);
+                }
+            }
+        };
+
+        if (isLoginOpen) {
+            // Add event listener when modal is open
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            // Cleanup event listener
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isLoginOpen]);
+
     return (
         <nav className="navbar">
-            <div className="logo" onClick={() => navigate('/')} style={{cursor: 'pointer'}}>
+            <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
                 <img src={`${import.meta.env.BASE_URL}assets/logo.png`} alt="CodeGenie Logo" className="logo-img" />
                 <div className="brand-name">Code<span>Genie</span></div>
             </div>
@@ -92,17 +115,17 @@ const Navbar = () => {
                         </div>
                         <form className="login-form" onSubmit={handleLogin}>
                             <div className="input-group">
-                                <input 
-                                    type="email" 
-                                    placeholder="이메일" 
+                                <input
+                                    type="email"
+                                    placeholder="이메일"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
                             </div>
                             <div className="input-group">
-                                <input 
-                                    type="password" 
-                                    placeholder="비밀번호" 
+                                <input
+                                    type="password"
+                                    placeholder="비밀번호"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />

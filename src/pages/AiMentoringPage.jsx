@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import Navbar from "../components/Navbar";
 import "../index.css"; // Ensure we have access to global styles
+import Editor from 'react-simple-code-editor';
+import { highlight, languages } from 'prismjs/components/prism-core';
+import 'prismjs/components/prism-clike';
+import 'prismjs/components/prism-java';
+import 'prismjs/components/prism-python';
+import 'prismjs/components/prism-c';
+import 'prismjs/components/prism-cpp';
+import 'prismjs/themes/prism-okaidia.css'; // Dark theme
+import "./CodeEditor.css"; // Code editor styles
 
 // Mode configurations
 const MODES = {
@@ -98,6 +107,8 @@ const AiMentoringPage = () => {
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [tempProblemText, setTempProblemText] = useState("");
   const [tempCodeText, setTempCodeText] = useState("");
+  const [tempCodeLanguage, setTempCodeLanguage] = useState("java"); // 언어 선택
+
   const [tempPlatform, setTempPlatform] = useState("baekjoon");
   const [tempProblemUrl, setTempProblemUrl] = useState("");
   const [isFetching, setIsFetching] = useState(false);
@@ -167,6 +178,8 @@ const AiMentoringPage = () => {
 
   const handleOpenCodeModal = () => {
     setTempCodeText(activeChat?.userCode || "");
+    setTempCodeLanguage(activeChat?.codeLanguage || "java");
+
     setShowCodeModal(true);
   };
 
@@ -191,7 +204,7 @@ const AiMentoringPage = () => {
     setChatSessions((prevSessions) =>
       prevSessions.map((chat) => {
         if (chat.id === activeChatId) {
-          return { ...chat, userCode: tempCodeText };
+          return { ...chat, userCode: tempCodeText, codeLanguage: tempCodeLanguage };
         }
         return chat;
       })
@@ -204,16 +217,47 @@ const AiMentoringPage = () => {
     setIsFetching(true);
     try {
       const response = await fetch(`/api/parse?url=${encodeURIComponent(tempProblemUrl)}&platform=${tempPlatform}`);
-      const data = await response.json();
 
-      if (data.error) {
-        alert(data.error);
-      } else {
+      const contentType = response.headers.get("content-type");
+      const isJson = contentType && contentType.includes("application/json");
+
+      if (isJson) {
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || `Server error: ${response.status}`);
+        }
+        if (data.error) {
+          throw new Error(data.error);
+        }
         setTempProblemText(data.content);
+      } else {
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`Server error: ${response.status} - ${text.substring(0, 100)}`);
+        }
+        throw new Error("Received non-JSON response from server");
       }
+
     } catch (error) {
       console.error("Error fetching problem:", error);
-      alert("문제 정보를 가져오는데 실패했습니다.");
+
+      // Fallback to demo data if server is unreachable
+      const isServerError = error.message.includes("Failed to fetch") || error.message.includes("Server error");
+
+      if (isServerError) {
+        if (confirm("서버에 연결할 수 없습니다. (백엔드 실행 필요)\n데모 데이터를 대신 불러오시겠습니까?")) {
+          setTempProblemText(
+            `[데모 데이터] ${tempPlatform === 'baekjoon' ? '백준' : '프로그래머스'} 문제 예시\n\n` +
+            `문제: 두 정수 A와 B를 입력받은 다음, A+B를 출력하는 프로그램을 작성하시오.\n\n` +
+            `입력: 첫째 줄에 A와 B가 주어진다. (0 < A, B < 10)\n` +
+            `출력: 첫째 줄에 A+B를 출력한다.\n\n` +
+            `(실제 데이터를 가져오려면 백엔드 서버를 실행해야 합니다)`
+          );
+          return;
+        }
+      }
+
+      alert(`문제 정보를 가져오는데 실패했습니다: ${error.message}`);
     } finally {
       setIsFetching(false);
     }
@@ -544,34 +588,77 @@ const AiMentoringPage = () => {
         </div>
       )}
 
-      {/* Code Modal */}
+      {/* Code Modal with Language Selection & Syntax Highlighting */}
       {showCodeModal && (
         <div className="modal-overlay" onClick={() => setShowCodeModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>⌨️ 코드 입력</h3>
+          <div className="modal-content code-editor-modal" onClick={(e) => e.stopPropagation()}>
+
+            {/* VS Code Style Header */}
+            <div className="code-editor-header">
+              <div className="window-controls">
+                <span className="dot red" onClick={() => setShowCodeModal(false)}></span>
+                <span className="dot yellow"></span>
+                <span className="dot green"></span>
+              </div>
+              <div className="editor-filename">
+                Solution.{tempCodeLanguage === 'java' ? 'java' : tempCodeLanguage === 'python' ? 'py' : 'cpp'}
+              </div>
+              <button className="modal-close" onClick={() => setShowCodeModal(false)}>✕</button>
+            </div>
+
+            {/* Language Tabs */}
+            <div className="language-selector">
               <button
-                className="modal-close"
-                onClick={() => setShowCodeModal(false)}
+                className={`lang-tab ${tempCodeLanguage === 'java' ? 'active' : ''}`}
+                onClick={() => setTempCodeLanguage('java')}
               >
-                ✕
+                <span className="lang-icon">☕</span> Java
+              </button>
+              <button
+                className={`lang-tab ${tempCodeLanguage === 'python' ? 'active' : ''}`}
+                onClick={() => setTempCodeLanguage('python')}
+              >
+                <span className="lang-icon">🐍</span> Python
+              </button>
+              <button
+                className={`lang-tab ${tempCodeLanguage === 'cpp' ? 'active' : ''}`}
+                onClick={() => setTempCodeLanguage('cpp')}
+              >
+                <span className="lang-icon">⚡</span> C++
               </button>
             </div>
-            <div className="modal-body">
-              <textarea
-                className="modal-textarea code"
+
+            {/* Code Area */}
+            <div className="code-editor-body">
+              <Editor
+                className="code-editor-wrapper"
                 value={tempCodeText}
-                onChange={(e) => setTempCodeText(e.target.value)}
-                placeholder="분석할 코드를 입력하세요..."
-                rows="15"
-                spellCheck="false"
+                onValueChange={code => setTempCodeText(code)}
+                highlight={code => {
+                  let grammar;
+                  switch (tempCodeLanguage) {
+                    case 'java': grammar = languages.java; break;
+                    case 'python': grammar = languages.python; break;
+                    case 'cpp': grammar = languages.cpp; break;
+                    default: grammar = languages.clike;
+                  }
+                  return highlight(code, grammar || languages.clike);
+                }}
+                padding={15}
+                style={{
+                  fontFamily: '"Consolas", "Courier New", monospace',
+                  fontSize: 14,
+                  backgroundColor: '#1e1e1e',
+                  minHeight: '100%',
+                  color: '#d4d4d4',
+                }}
+                textareaClassName="code-editor-textarea"
               />
             </div>
-            <div className="modal-footer">
-              <button
-                className="modal-btn cancel"
-                onClick={() => setShowCodeModal(false)}
-              >
+
+            {/* Footer */}
+            <div className="code-editor-footer">
+              <button className="modal-btn cancel" onClick={() => setShowCodeModal(false)}>
                 취소
               </button>
               <button className="modal-btn save" onClick={handleSaveCode}>
