@@ -98,6 +98,9 @@ const AiMentoringPage = () => {
   const [showCodeModal, setShowCodeModal] = useState(false);
   const [tempProblemText, setTempProblemText] = useState("");
   const [tempCodeText, setTempCodeText] = useState("");
+  const [tempPlatform, setTempPlatform] = useState("baekjoon");
+  const [tempProblemUrl, setTempProblemUrl] = useState("");
+  const [isFetching, setIsFetching] = useState(false);
   const messagesEndRef = useRef(null);
 
   // Get current active chat
@@ -157,6 +160,8 @@ const AiMentoringPage = () => {
 
   const handleOpenProblemModal = () => {
     setTempProblemText(activeChat?.problemText || "");
+    setTempPlatform(activeChat?.platform || "baekjoon");
+    setTempProblemUrl(activeChat?.problemUrl || "");
     setShowProblemModal(true);
   };
 
@@ -169,7 +174,12 @@ const AiMentoringPage = () => {
     setChatSessions((prevSessions) =>
       prevSessions.map((chat) => {
         if (chat.id === activeChatId) {
-          return { ...chat, problemText: tempProblemText };
+          return {
+            ...chat,
+            problemText: tempProblemText,
+            platform: tempPlatform,
+            problemUrl: tempProblemUrl,
+          };
         }
         return chat;
       })
@@ -187,6 +197,26 @@ const AiMentoringPage = () => {
       })
     );
     setShowCodeModal(false);
+  };
+
+  const handleFetchProblem = async () => {
+    if (!tempProblemUrl) return;
+    setIsFetching(true);
+    try {
+      const response = await fetch(`/api/parse?url=${encodeURIComponent(tempProblemUrl)}&platform=${tempPlatform}`);
+      const data = await response.json();
+
+      if (data.error) {
+        alert(data.error);
+      } else {
+        setTempProblemText(data.content);
+      }
+    } catch (error) {
+      console.error("Error fetching problem:", error);
+      alert("문제 정보를 가져오는데 실패했습니다.");
+    } finally {
+      setIsFetching(false);
+    }
   };
 
   const handleSendMessage = (e) => {
@@ -291,14 +321,13 @@ const AiMentoringPage = () => {
             {chatSessions.map((chat) => {
               const chatMode =
                 MODES[
-                  Object.keys(MODES).find((key) => MODES[key].id === chat.mode)
+                Object.keys(MODES).find((key) => MODES[key].id === chat.mode)
                 ] || MODES.SOLUTION;
               return (
                 <div
                   key={chat.id}
-                  className={`history-item ${
-                    chat.id === activeChatId ? "active" : ""
-                  }`}
+                  className={`history-item ${chat.id === activeChatId ? "active" : ""
+                    }`}
                   onClick={() => setActiveChatId(chat.id)}
                 >
                   <span className="icon">{chatMode.icon}</span>
@@ -343,9 +372,8 @@ const AiMentoringPage = () => {
                 {Object.values(MODES).map((mode) => (
                   <button
                     key={mode.id}
-                    className={`mode-btn ${
-                      activeMode === mode.id ? "active" : ""
-                    }`}
+                    className={`mode-btn ${activeMode === mode.id ? "active" : ""
+                      }`}
                     onClick={() => handleModeChange(mode.id)}
                     title={mode.description}
                     style={{
@@ -361,9 +389,8 @@ const AiMentoringPage = () => {
               {/* Context Status Indicators */}
               <div className="context-status">
                 <button
-                  className={`context-btn ${
-                    activeChat?.problemText ? "has-content" : ""
-                  }`}
+                  className={`context-btn ${activeChat?.problemText ? "has-content" : ""
+                    }`}
                   onClick={handleOpenProblemModal}
                   title={activeChat?.problemText ? "문제 수정" : "문제 입력"}
                 >
@@ -374,9 +401,8 @@ const AiMentoringPage = () => {
                   </span>
                 </button>
                 <button
-                  className={`context-btn ${
-                    activeChat?.userCode ? "has-content" : ""
-                  }`}
+                  className={`context-btn ${activeChat?.userCode ? "has-content" : ""
+                    }`}
                   onClick={handleOpenCodeModal}
                   title={activeChat?.userCode ? "코드 수정" : "코드 입력"}
                 >
@@ -435,12 +461,72 @@ const AiMentoringPage = () => {
               </button>
             </div>
             <div className="modal-body">
+
+              <label className="input-group-label">플랫폼 선택</label>
+              <div className="platform-grid">
+                <div
+                  className={`platform-card ${tempPlatform === "baekjoon" ? "selected" : ""
+                    }`}
+                  onClick={() => {
+                    if (tempPlatform !== "baekjoon") {
+                      setTempPlatform("baekjoon");
+                      setTempProblemUrl("");
+                      setTempProblemText("");
+                    }
+                  }}
+                >
+                  <img src="/CodeGenie/assets/boj_logo.png" alt="Baekjoon" className="platform-logo" />
+                  <span className="platform-name">백준 (BOJ)</span>
+                </div>
+                <div
+                  className={`platform-card ${tempPlatform === "programmers" ? "selected" : ""
+                    }`}
+                  onClick={() => {
+                    if (tempPlatform !== "programmers") {
+                      setTempPlatform("programmers");
+                      setTempProblemUrl("");
+                      setTempProblemText("");
+                    }
+                  }}
+                >
+                  <img src="/CodeGenie/assets/pgm_logo.png" alt="Programmers" className="platform-logo" />
+                  <span className="platform-name">프로그래머스</span>
+                </div>
+              </div>
+
+              <label className="input-group-label">문제 링크 또는 번호</label>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <input
+                  type="text"
+                  className="modal-input"
+                  value={tempProblemUrl}
+                  onChange={(e) => setTempProblemUrl(e.target.value)}
+                  placeholder={
+                    tempPlatform === "baekjoon"
+                      ? "예: 1000 또는 https://www.acmicpc.net/problem/1000"
+                      : "예: 문제 URL 또는 제목"
+                  }
+                  style={{ marginBottom: '1.5rem', flex: 1 }}
+                />
+                <button
+                  className="modal-btn save"
+                  style={{ height: '52px', whiteSpace: 'nowrap' }}
+                  onClick={handleFetchProblem}
+                  disabled={isFetching}
+                >
+                  {isFetching ? "가져오는 중..." : "가져오기"}
+                </button>
+              </div>
+
+              <label className="input-group-label">
+                문제 내용 (직접 입력/메모)
+              </label>
               <textarea
                 className="modal-textarea"
                 value={tempProblemText}
                 onChange={(e) => setTempProblemText(e.target.value)}
-                placeholder="코딩 테스트 문제를 입력하세요..."
-                rows="12"
+                placeholder="문제의 핵심 내용이나 제약조건을 복사해두면 더 정확한 답변을 받을 수 있습니다."
+                rows="6"
               />
             </div>
             <div className="modal-footer">
