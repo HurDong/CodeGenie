@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import "../index.css";
 import Editor from 'react-simple-code-editor';
 import { api } from "../api/client";
+import LanguageSelector from "../components/ui/LanguageSelector";
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-java';
@@ -77,24 +78,7 @@ const AiMentoringPage = () => {
 
   const messagesEndRef = useRef(null);
 
-  // Tooltip State
-  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: "" });
 
-  const handleTooltipEnter = (e, text) => {
-    if (e.target.scrollWidth > e.target.clientWidth) {
-      const rect = e.target.getBoundingClientRect();
-      setTooltip({
-        visible: true,
-        x: rect.right + 15,
-        y: rect.top + (rect.height / 2),
-        text
-      });
-    }
-  };
-
-  const handleTooltipLeave = () => {
-    setTooltip(prev => ({ ...prev, visible: false }));
-  };
 
   // Get current active chat
   const activeChat =
@@ -209,9 +193,35 @@ const AiMentoringPage = () => {
     setShowProblemModal(true);
   };
 
+  // Default code templates
+  const DEFAULT_CODE = {
+    java: `public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello, CodeGenie!");
+    }
+}`,
+    python: `print("Hello, CodeGenie!")`,
+    cpp: `#include <iostream>
+
+int main() {
+    std::cout << "Hello, CodeGenie!" << std::endl;
+    return 0;
+}`,
+    c: `#include <stdio.h>
+
+int main() {
+    printf("Hello, CodeGenie!\\n");
+    return 0;
+}`
+  };
+
   const handleOpenCodeModal = () => {
-    setTempCodeText(activeChat?.userCode || "");
-    setTempCodeLanguage(activeChat?.codeLanguage || "java");
+    const savedCode = activeChat?.userCode;
+    const savedLanguage = activeChat?.codeLanguage || "java";
+    
+    setTempCodeLanguage(savedLanguage);
+    // Use saved code if exists, otherwise use default template for the language
+    setTempCodeText(savedCode || DEFAULT_CODE[savedLanguage]);
 
     setShowCodeModal(true);
   };
@@ -433,6 +443,40 @@ const AiMentoringPage = () => {
     }
   };
 
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [executionResult, setExecutionResult] = useState(null);
+
+  const handleRunCode = async () => {
+    if (!tempCodeText.trim()) {
+      toast.error("코드를 입력해주세요.");
+      return;
+    }
+
+    setIsExecuting(true);
+    setExecutionResult(null);
+
+    try {
+      const result = await api.executeCode(tempCodeLanguage, tempCodeText);
+      setExecutionResult(result);
+      if (result.exitCode === 0) {
+        toast.success("실행 완료");
+      } else {
+        toast.error("실행 중 오류가 발생했습니다.");
+      }
+    } catch (error) {
+      console.error("Execution failed:", error);
+      toast.error("코드 실행에 실패했습니다.");
+      setExecutionResult({
+        error: "Server connection failed or timeout.",
+        output: "",
+        executionTimeMs: 0,
+        exitCode: -1
+      });
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
   return (
     <div className="ai-mentoring-page">
       <Navbar />
@@ -459,8 +503,6 @@ const AiMentoringPage = () => {
               <div className="history-item-content">
                 <div 
                   className="history-item-title" 
-                  onMouseEnter={(e) => handleTooltipEnter(e, chat.title)}
-                  onMouseLeave={handleTooltipLeave}
                 >
                   {chat.title}
                 </div>
@@ -533,30 +575,25 @@ const AiMentoringPage = () => {
               </div>
 
               {/* Context Status Indicators */}
-              <div className="context-status">
+              {/* Context Status Indicators - New IDE Style */}
+              <div className="ide-controls">
                 <button
-                  className={`context-btn ${activeChat?.problemText ? "has-content" : ""
-                    }`}
+                  className={`ide-btn ${activeChat?.problemText ? "active" : ""}`}
                   onClick={handleOpenProblemModal}
                   title={activeChat?.problemText ? "문제 수정" : "문제 입력"}
                 >
-                  <span className="context-icon">📄</span>
-                  <span className="context-label">문제</span>
-                  <span className="context-status-badge">
-                    {activeChat?.problemText ? "완료" : "미입력"}
-                  </span>
+                  <span className="icon">📄</span>
+                  <span className="label">문제</span>
+                  <div className="status-dot" title={activeChat?.problemText ? "입력됨" : "미입력"}></div>
                 </button>
                 <button
-                  className={`context-btn ${activeChat?.userCode ? "has-content" : ""
-                    }`}
+                  className={`ide-btn ${activeChat?.userCode ? "active" : ""}`}
                   onClick={handleOpenCodeModal}
                   title={activeChat?.userCode ? "코드 수정" : "코드 입력"}
                 >
-                  <span className="context-icon">⌨️</span>
-                  <span className="context-label">코드</span>
-                  <span className="context-status-badge">
-                    {activeChat?.userCode ? "완료" : "미입력"}
-                  </span>
+                  <span className="icon">⚡</span>
+                  <span className="label">코드</span>
+                  <div className="status-dot" title={activeChat?.userCode ? "작성됨" : "미작성"}></div>
                 </button>
               </div>
             </div>
@@ -694,10 +731,11 @@ const AiMentoringPage = () => {
               ) : (
                 <div className="step-review" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h4 style={{ margin: 0, color: '#3b82f6' }}>문제 정보 확인 및 수정</h4>
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <h4 style={{ margin: 0, color: '#e2e8f0', fontSize: '1.1rem' }}>문제 정보 확인 및 수정</h4>
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       {tempProblemUrl && (
                         <button
+                          className="ide-btn"
                           onClick={() => {
                             let url = tempProblemUrl;
                             if (tempPlatform === 'baekjoon' && /^\d+$/.test(url)) {
@@ -705,17 +743,29 @@ const AiMentoringPage = () => {
                             }
                             window.open(url, '_blank');
                           }}
-                          style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          style={{ 
+                            padding: '6px 12px', 
+                            fontSize: '0.85rem',
+                            background: 'rgba(59, 130, 246, 0.1)',
+                            borderColor: 'rgba(59, 130, 246, 0.3)',
+                            color: '#60a5fa',
+                            gap: '6px'
+                          }}
                           title="원본 문제 새 창에서 열기"
                         >
-                          🔗 원본 보기
+                          <span>🔗</span> 원본 보기
                         </button>
                       )}
                       <button 
+                        className="ide-btn"
                         onClick={() => setProblemStep('input')}
-                        style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.9rem' }}
+                        style={{ 
+                          padding: '6px 12px', 
+                          fontSize: '0.85rem',
+                          gap: '6px'
+                        }}
                       >
-                        ← 다시 가져오기
+                        <span>↺</span> 다시 가져오기
                       </button>
                     </div>
                   </div>
@@ -800,48 +850,50 @@ const AiMentoringPage = () => {
                               }}
                               style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
                             >
-                              ✕
+                              삭제
                             </button>
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            <textarea
-                              className="modal-textarea"
-                              value={ex.input || ""}
-                              onChange={(e) => {
-                                const newExamples = [...tempProblemData.examples];
-                                newExamples[idx].input = e.target.value;
-                                setTempProblemData({ ...tempProblemData, examples: newExamples });
-                              }}
-                              placeholder="입력"
-                              rows="2"
-                            />
-                            <textarea
-                              className="modal-textarea"
-                              value={ex.output || ""}
-                              onChange={(e) => {
-                                const newExamples = [...tempProblemData.examples];
-                                newExamples[idx].output = e.target.value;
-                                setTempProblemData({ ...tempProblemData, examples: newExamples });
-                              }}
-                              placeholder="출력"
-                              rows="2"
-                            />
+                            <div>
+                              <label style={{ fontSize: '0.8rem', color: '#888' }}>입력</label>
+                              <textarea
+                                className="modal-textarea"
+                                value={ex.input}
+                                onChange={(e) => {
+                                  const newExamples = [...tempProblemData.examples];
+                                  newExamples[idx].input = e.target.value;
+                                  setTempProblemData({ ...tempProblemData, examples: newExamples });
+                                }}
+                                rows="3"
+                              />
+                            </div>
+                            <div>
+                              <label style={{ fontSize: '0.8rem', color: '#888' }}>출력</label>
+                              <textarea
+                                className="modal-textarea"
+                                value={ex.output}
+                                onChange={(e) => {
+                                  const newExamples = [...tempProblemData.examples];
+                                  newExamples[idx].output = e.target.value;
+                                  setTempProblemData({ ...tempProblemData, examples: newExamples });
+                                }}
+                                rows="3"
+                              />
+                            </div>
                           </div>
                         </div>
                       ))}
-                      <button
-                        className="modal-btn"
-                        style={{ width: '100%', marginTop: '0.5rem', backgroundColor: '#333', fontSize: '0.9rem' }}
-                        onClick={() => {
-                          setTempProblemData({
-                            ...tempProblemData,
-                            examples: [...(tempProblemData.examples || []), { input: "", output: "" }]
-                          });
-                        }}
-                      >
-                        + 예제 추가
-                      </button>
                     </div>
+                    <button
+                      onClick={() => setTempProblemData({
+                        ...tempProblemData,
+                        examples: [...(tempProblemData.examples || []), { input: "", output: "" }]
+                      })}
+                      className="modal-btn secondary"
+                      style={{ width: '100%', marginTop: '0.5rem' }}
+                    >
+                      + 예제 추가
+                    </button>
                   </div>
                 </div>
               )}
@@ -855,7 +907,7 @@ const AiMentoringPage = () => {
               </button>
               {problemStep === 'review' && (
                 <button className="modal-btn save" onClick={handleSaveProblem}>
-                  저장
+                  저장하기
                 </button>
               )}
             </div>
@@ -863,128 +915,127 @@ const AiMentoringPage = () => {
         </div>
       )}
 
-      {/* Code Modal with Language Selection & Syntax Highlighting */}
+      {/* Code Modal */}
       {showCodeModal && (
         <div className="modal-overlay" onClick={() => setShowCodeModal(false)}>
-          <div className="modal-content code-editor-modal" onClick={(e) => e.stopPropagation()}>
-
-            {/* VS Code Style Header */}
-            <div className="code-editor-header">
-              <div className="window-controls">
-                <span className="dot red" onClick={() => setShowCodeModal(false)}></span>
-                <span className="dot yellow"></span>
-                <span className="dot green"></span>
+          <div className="modal-content large" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>⌨️ 코드 입력</h3>
+              <div className="language-selector-wrapper">
+                <LanguageSelector
+                  currentLanguage={tempCodeLanguage}
+                  onLanguageChange={(newLang) => {
+                    setTempCodeLanguage(newLang);
+                    // If current code is empty or matches one of the default templates, switch to new template
+                    const isDefaultOrEmpty = !tempCodeText.trim() || Object.values(DEFAULT_CODE).some(code => code.trim() === tempCodeText.trim());
+                    
+                    if (isDefaultOrEmpty) {
+                      setTempCodeText(DEFAULT_CODE[newLang]);
+                    }
+                  }}
+                />
               </div>
-              <div className="editor-filename">
-                Solution.{tempCodeLanguage === 'java' ? 'java' : tempCodeLanguage === 'python' ? 'py' : 'cpp'}
+              <button
+                className="modal-close"
+                onClick={() => setShowCodeModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body code-body">
+              <div className="code-editor-wrapper">
+                <Editor
+                  value={tempCodeText}
+                  onValueChange={(code) => setTempCodeText(code)}
+                  highlight={(code) => highlight(code, languages[tempCodeLanguage] || languages.clike)}
+                  padding={15}
+                  className="code-editor"
+                  style={{
+                    fontFamily: '"Fira Code", "Fira Mono", monospace',
+                    fontSize: 14,
+                    minHeight: '300px',
+                  }}
+                  placeholder="// 여기에 코드를 붙여넣거나 작성하세요..."
+                />
               </div>
-              <button className="modal-close" onClick={() => setShowCodeModal(false)}>✕</button>
-            </div>
 
-            {/* Language Tabs */}
-            <div className="language-selector">
-              <button
-                className={`lang-tab ${tempCodeLanguage === 'java' ? 'active' : ''}`}
-                onClick={() => setTempCodeLanguage('java')}
-              >
-                <span className="lang-icon">☕</span> Java
-              </button>
-              <button
-                className={`lang-tab ${tempCodeLanguage === 'python' ? 'active' : ''}`}
-                onClick={() => setTempCodeLanguage('python')}
-              >
-                <span className="lang-icon">🐍</span> Python
-              </button>
-              <button
-                className={`lang-tab ${tempCodeLanguage === 'cpp' ? 'active' : ''}`}
-                onClick={() => setTempCodeLanguage('cpp')}
-              >
-                <span className="lang-icon">⚡</span> C++
-              </button>
+              {/* Execution Result Terminal */}
+              {executionResult && (
+                <div className="terminal-output">
+                  <div className="terminal-header">
+                    <span>Console Output</span>
+                    <span className="execution-time">
+                      ⏱ {executionResult.executionTimeMs}ms
+                    </span>
+                  </div>
+                  <div className="terminal-body">
+                    {executionResult.output && (
+                      <pre className="output-text">{executionResult.output}</pre>
+                    )}
+                    {executionResult.error && (
+                      <pre className="error-text">{executionResult.error}</pre>
+                    )}
+                    {executionResult.exitCode !== 0 && !executionResult.error && (
+                      <div className="exit-code-error">
+                        Process exited with code {executionResult.exitCode}
+                      </div>
+                    )}
+                    {!executionResult.output && !executionResult.error && (
+                      <div className="empty-output">No output</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-
-            {/* Code Area */}
-            <div className="code-editor-body">
-              <Editor
-                className="code-editor-wrapper"
-                value={tempCodeText}
-                onValueChange={code => setTempCodeText(code)}
-                highlight={code => {
-                  let grammar;
-                  switch (tempCodeLanguage) {
-                    case 'java': grammar = languages.java; break;
-                    case 'python': grammar = languages.python; break;
-                    case 'cpp': grammar = languages.cpp; break;
-                    default: grammar = languages.clike;
-                  }
-                  return highlight(code, grammar || languages.clike);
-                }}
-                padding={15}
-                style={{
-                  fontFamily: '"Consolas", "Courier New", monospace',
-                  fontSize: 14,
-                  backgroundColor: '#1e1e1e',
-                  minHeight: '100%',
-                  color: '#d4d4d4',
-                }}
-                textareaClassName="code-editor-textarea"
-              />
-            </div>
-
-            {/* Footer */}
-            <div className="code-editor-footer">
-              <button className="modal-btn cancel" onClick={() => setShowCodeModal(false)}>
-                취소
-              </button>
-              <button className="modal-btn save" onClick={handleSaveCode}>
-                저장
-              </button>
+            <div className="modal-footer space-between">
+              <div className="left-actions">
+                <button 
+                  className={`neon-run-btn ${isExecuting ? 'loading' : ''}`} 
+                  onClick={handleRunCode}
+                  disabled={isExecuting}
+                >
+                  {isExecuting ? (
+                    <>
+                      <span className="spinner"></span> 실행 중...
+                    </>
+                  ) : (
+                    <>
+                      <span className="play-icon">▶</span> 코드 실행
+                    </>
+                  )}
+                </button>
+              </div>
+              <div className="right-actions">
+                <button
+                  className="neon-cancel-btn"
+                  onClick={() => setShowCodeModal(false)}
+                >
+                  취소
+                </button>
+                <button className="neon-save-btn" onClick={handleSaveCode}>
+                  저장하기
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-      {/* Custom Tooltip */}
-      {tooltip.visible && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: tooltip.y,
-            left: tooltip.x,
-            transform: 'translateY(-50%)',
-            background: 'rgba(15, 23, 42, 0.95)',
-            color: '#f1f5f9',
-            padding: '8px 12px',
-            borderRadius: '8px',
-            fontSize: '0.85rem',
-            fontWeight: '500',
-            pointerEvents: 'none',
-            zIndex: 10000,
-            border: '1px solid rgba(59, 130, 246, 0.2)',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
-            whiteSpace: 'nowrap',
-            maxWidth: '400px',
-            backdropFilter: 'blur(4px)',
-          }}
-        >
-          {tooltip.text}
         </div>
       )}
 
       {/* Title Modal */}
       {showTitleModal && (
         <div className="modal-overlay" onClick={() => setShowTitleModal(false)}>
-          <div className="modal-content" style={{ width: '400px' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content small" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{titleModalMode === 'create' ? '새 대화 시작' : '제목 수정'}</h3>
               <button className="modal-close" onClick={() => setShowTitleModal(false)}>✕</button>
             </div>
             <div className="modal-body">
-              <label className="input-group-label">대화 제목</label>
+              <label className="input-group-label">대화 주제 (제목)</label>
               <input
                 className="modal-input"
                 value={tempTitle}
                 onChange={(e) => setTempTitle(e.target.value)}
-                placeholder="제목을 입력하세요"
+                placeholder="예: 백준 1000번 문제 풀이"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleTitleSubmit();
@@ -994,12 +1045,14 @@ const AiMentoringPage = () => {
             <div className="modal-footer">
               <button className="modal-btn cancel" onClick={() => setShowTitleModal(false)}>취소</button>
               <button className="modal-btn save" onClick={handleTitleSubmit}>
-                {titleModalMode === 'create' ? '시작하기' : '수정하기'}
+                {titleModalMode === 'create' ? '시작하기' : '저장하기'}
               </button>
             </div>
           </div>
         </div>
       )}
+
+
     </div>
   );
 };
