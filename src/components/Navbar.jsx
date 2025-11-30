@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 
@@ -42,7 +43,7 @@ const Navbar = () => {
             // Redirect to AI Mentoring page upon login
             navigate('/ai-mentoring');
         } else {
-            alert('이메일 또는 비밀번호가 올바르지 않습니다.\n(Hint: test@code.genie / 1234)');
+            toast.error('이메일 또는 비밀번호가 올바르지 않습니다.\n(Hint: test@code.genie / 1234)');
         }
     };
 
