@@ -2,11 +2,11 @@ const API_BASE_URL = '/api';
 
 export const api = {
   // Chat
-  startChat: async (mode, problemText, userCode) => {
+  startChat: async (mode, problemText, userCode, title) => {
     const response = await fetch(`${API_BASE_URL}/chat/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode, problemText, userCode }),
+      body: JSON.stringify({ mode, problemText, userCode, title }),
     });
     if (!response.ok) throw new Error('Failed to start chat');
     const result = await response.json();
@@ -21,6 +21,18 @@ export const api = {
       body: JSON.stringify({ conversationId, content }),
     });
     if (!response.ok) throw new Error('Failed to send message');
+    const result = await response.json();
+    if (result.status === 'error') throw new Error(result.message);
+    return result.data;
+  },
+
+  updateConversation: async (id, data) => {
+    const response = await fetch(`${API_BASE_URL}/chat/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update conversation');
     const result = await response.json();
     if (result.status === 'error') throw new Error(result.message);
     return result.data;

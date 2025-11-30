@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
+import toast from 'react-hot-toast';
 import Navbar from "../components/Navbar";
 import "../index.css";
 import Editor from 'react-simple-code-editor';
 import { api } from "../api/client";
-import Navbar from "../components/Navbar";
-import "../index.css"; // Ensure we have access to global styles
-import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-java';
@@ -52,14 +50,51 @@ const AiMentoringPage = () => {
   const [input, setInput] = useState("");
   const [showProblemModal, setShowProblemModal] = useState(false);
   const [showCodeModal, setShowCodeModal] = useState(false);
-  const [tempProblemText, setTempProblemText] = useState("");
+  const [tempProblemData, setTempProblemData] = useState({
+    title: "",
+    description: "",
+    inputFormat: "",
+    outputFormat: "",
+    constraints: "",
+    timeLimit: "",
+    memoryLimit: "",
+    examples: []
+  });
+  const [activeProblemTab, setActiveProblemTab] = useState("description");
+  const [problemStep, setProblemStep] = useState("input"); // input | review
   const [tempCodeText, setTempCodeText] = useState("");
-  const [tempCodeLanguage, setTempCodeLanguage] = useState("java"); // 언어 선택
+  const [tempCodeLanguage, setTempCodeLanguage] = useState("java");
 
   const [tempPlatform, setTempPlatform] = useState("baekjoon");
   const [tempProblemUrl, setTempProblemUrl] = useState("");
   const [isFetching, setIsFetching] = useState(false);
+  
+  // Title Modal State
+  const [showTitleModal, setShowTitleModal] = useState(false);
+  const [titleModalMode, setTitleModalMode] = useState('create'); // 'create' | 'edit'
+  const [tempTitle, setTempTitle] = useState("");
+  const [targetChatId, setTargetChatId] = useState(null);
+
   const messagesEndRef = useRef(null);
+
+  // Tooltip State
+  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: "" });
+
+  const handleTooltipEnter = (e, text) => {
+    if (e.target.scrollWidth > e.target.clientWidth) {
+      const rect = e.target.getBoundingClientRect();
+      setTooltip({
+        visible: true,
+        x: rect.right + 15,
+        y: rect.top + (rect.height / 2),
+        text
+      });
+    }
+  };
+
+  const handleTooltipLeave = () => {
+    setTooltip(prev => ({ ...prev, visible: false }));
+  };
 
   // Get current active chat
   const activeChat =
@@ -77,6 +112,22 @@ const AiMentoringPage = () => {
     scrollToBottom();
   }, [messages, activeChatId]);
 
+  // Fetch history on mount
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const history = await api.getHistory();
+        setChatSessions(history);
+        if (history.length > 0) {
+          setActiveChatId(history[0].id);
+        }
+      } catch (error) {
+        console.error("Failed to fetch history:", error);
+      }
+    };
+    fetchHistory();
+  }, []);
+
   // Update mode when switching chats
   useEffect(() => {
     if (activeChat) {
@@ -84,14 +135,43 @@ const AiMentoringPage = () => {
     }
   }, [activeChatId, activeChat]);
 
-  const handleNewChat = async () => {
+  const handleNewChat = () => {
+    setTempTitle("");
+    setTitleModalMode('create');
+    setShowTitleModal(true);
+  };
+
+  const handleEditTitle = (chat) => {
+    setTempTitle(chat.title);
+    setTargetChatId(chat.id);
+    setTitleModalMode('edit');
+    setShowTitleModal(true);
+  };
+
+  const handleTitleSubmit = async () => {
+    if (!tempTitle.trim()) {
+      toast.error("제목을 입력해주세요.");
+      return;
+    }
+
     try {
-      const newChat = await api.startChat(activeMode, "", "");
-      setChatSessions((prev) => [newChat, ...prev]);
-      setActiveChatId(newChat.id);
+      if (titleModalMode === 'create') {
+        const newChat = await api.startChat(activeMode, "", "", tempTitle);
+        setChatSessions((prev) => [newChat, ...prev]);
+        setActiveChatId(newChat.id);
+        toast.success("새 대화가 시작되었습니다.");
+      } else {
+        // Edit mode
+        await api.updateConversation(targetChatId, { title: tempTitle });
+        setChatSessions((prev) => prev.map(chat => 
+          chat.id === targetChatId ? { ...chat, title: tempTitle } : chat
+        ));
+        toast.success("제목이 수정되었습니다.");
+      }
+      setShowTitleModal(false);
     } catch (error) {
-      console.error("Failed to start new chat:", error);
-      alert("새 대화를 시작할 수 없습니다.");
+      console.error("Failed to save title:", error);
+      toast.error("작업에 실패했습니다.");
     }
   };
 
@@ -108,7 +188,22 @@ const AiMentoringPage = () => {
   };
 
   const handleOpenProblemModal = () => {
-    setTempProblemText(activeChat?.problemText || "");
+    if (activeChat?.problemSpec) {
+      setTempProblemData(activeChat.problemSpec);
+      setProblemStep("review");
+    } else {
+      setTempProblemData({
+        title: "",
+        description: activeChat?.problemText || "",
+        inputFormat: "",
+        outputFormat: "",
+        constraints: "",
+        timeLimit: "",
+        memoryLimit: "",
+        examples: []
+      });
+      setProblemStep("input");
+    }
     setTempPlatform(activeChat?.platform || "baekjoon");
     setTempProblemUrl(activeChat?.problemUrl || "");
     setShowProblemModal(true);
@@ -121,33 +216,73 @@ const AiMentoringPage = () => {
     setShowCodeModal(true);
   };
 
-  const handleSaveProblem = () => {
-    setChatSessions((prevSessions) =>
-      prevSessions.map((chat) => {
-        if (chat.id === activeChatId) {
-          return {
-            ...chat,
-            problemText: tempProblemText,
-            platform: tempPlatform,
-            problemUrl: tempProblemUrl,
-          };
-        }
-        return chat;
-      })
-    );
-    setShowProblemModal(false);
+  const handleSaveProblem = async () => {
+    try {
+      let chatId = activeChatId;
+      if (!chatId) {
+        const newChat = await api.startChat(activeMode, "", "");
+        setChatSessions((prev) => [newChat, ...prev]);
+        setActiveChatId(newChat.id);
+        chatId = newChat.id;
+      }
+
+      await api.updateConversation(chatId, {
+        problemSpec: tempProblemData,
+        problemText: tempProblemData.description, // Fallback
+        platform: tempPlatform,
+        problemUrl: tempProblemUrl
+      });
+
+      setChatSessions((prevSessions) =>
+        prevSessions.map((chat) => {
+          if (chat.id === chatId) {
+            return {
+              ...chat,
+              problemSpec: tempProblemData,
+              problemText: tempProblemData.description,
+              platform: tempPlatform,
+              problemUrl: tempProblemUrl,
+            };
+          }
+          return chat;
+        })
+      );
+      setShowProblemModal(false);
+    } catch (error) {
+      console.error("Failed to save problem:", error);
+      toast.error("문제 정보를 저장하는데 실패했습니다.");
+    }
   };
 
-  const handleSaveCode = () => {
-    setChatSessions((prevSessions) =>
-      prevSessions.map((chat) => {
-        if (chat.id === activeChatId) {
-          return { ...chat, userCode: tempCodeText, codeLanguage: tempCodeLanguage };
-        }
-        return chat;
-      })
-    );
-    setShowCodeModal(false);
+  const handleSaveCode = async () => {
+    try {
+      let chatId = activeChatId;
+      if (!chatId) {
+        const newChat = await api.startChat(activeMode, "", "");
+        setChatSessions((prev) => [newChat, ...prev]);
+        setActiveChatId(newChat.id);
+        chatId = newChat.id;
+      }
+
+      await api.updateConversation(chatId, {
+        userCode: tempCodeText,
+        codeLanguage: tempCodeLanguage
+      });
+
+      setChatSessions((prevSessions) =>
+        prevSessions.map((chat) => {
+          if (chat.id === chatId) {
+            return { ...chat, userCode: tempCodeText, codeLanguage: tempCodeLanguage };
+          }
+          return chat;
+        })
+      );
+      setShowCodeModal(false);
+      toast.success("코드가 저장되었습니다.");
+    } catch (error) {
+      console.error("Failed to save code:", error);
+      toast.error("코드 저장 실패");
+    }
   };
 
   const handleFetchProblem = async () => {
@@ -167,7 +302,8 @@ const AiMentoringPage = () => {
         if (data.error) {
           throw new Error(data.error);
         }
-        setTempProblemText(data.content);
+        setTempProblemData(data);
+        setProblemStep("review");
       } else {
         if (!response.ok) {
           const text = await response.text();
@@ -183,19 +319,68 @@ const AiMentoringPage = () => {
       const isServerError = error.message.includes("Failed to fetch") || error.message.includes("Server error");
 
       if (isServerError) {
-        if (confirm("서버에 연결할 수 없습니다. (백엔드 실행 필요)\n데모 데이터를 대신 불러오시겠습니까?")) {
-          setTempProblemText(
-            `[데모 데이터] ${tempPlatform === 'baekjoon' ? '백준' : '프로그래머스'} 문제 예시\n\n` +
-            `문제: 두 정수 A와 B를 입력받은 다음, A+B를 출력하는 프로그램을 작성하시오.\n\n` +
-            `입력: 첫째 줄에 A와 B가 주어진다. (0 < A, B < 10)\n` +
-            `출력: 첫째 줄에 A+B를 출력한다.\n\n` +
-            `(실제 데이터를 가져오려면 백엔드 서버를 실행해야 합니다)`
-          );
-          return;
-        }
+        toast((t) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '250px' }}>
+            <div style={{ fontWeight: '600' }}>서버 연결 실패 (백엔드 실행 필요)</div>
+            <div style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>데모 데이터를 대신 불러오시겠습니까?</div>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
+              <button 
+                onClick={() => toast.dismiss(t.id)}
+                style={{
+                  padding: '6px 12px',
+                  background: 'transparent',
+                  color: '#94a3b8',
+                  border: '1px solid #475569',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem'
+                }}
+              >
+                취소
+              </button>
+              <button 
+                onClick={() => {
+                  setTempProblemData({
+                    title: "A+B",
+                    description: "두 정수 A와 B를 입력받은 다음, A+B를 출력하는 프로그램을 작성하시오.",
+                    inputFormat: "첫째 줄에 A와 B가 주어진다. (0 < A, B < 10)",
+                    outputFormat: "첫째 줄에 A+B를 출력한다.",
+                    constraints: "",
+                    timeLimit: "1초",
+                    memoryLimit: "128MB",
+                    examples: [{ input: "1 2", output: "3" }]
+                  });
+                  setProblemStep("review");
+                  toast.dismiss(t.id);
+                }}
+                style={{
+                  padding: '6px 12px',
+                  background: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  fontWeight: '500'
+                }}
+              >
+                불러오기
+              </button>
+            </div>
+          </div>
+        ), {
+          duration: 8000,
+          style: {
+            background: '#1e293b',
+            color: '#fff',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '16px',
+          },
+        });
+        return;
       }
 
-      alert(`문제 정보를 가져오는데 실패했습니다: ${error.message}`);
+      toast.error(`문제 정보를 가져오는데 실패했습니다: ${error.message}`);
     } finally {
       setIsFetching(false);
     }
@@ -244,7 +429,7 @@ const AiMentoringPage = () => {
       );
     } catch (error) {
       console.error("Failed to send message:", error);
-      alert("메시지 전송 실패");
+      toast.error("메시지 전송 실패");
     }
   };
 
@@ -265,14 +450,35 @@ const AiMentoringPage = () => {
                 ] || MODES.SOLUTION;
               return (
                 <div
-                  key={chat.id}
-                  className={`history-item ${chat.id === activeChatId ? "active" : ""
-                    }`}
-                  onClick={() => setActiveChatId(chat.id)}
+              key={chat.id}
+              className={`history-item ${
+                chat.id === activeChatId ? "active" : ""
+              }`}
+              onClick={() => setActiveChatId(chat.id)}
+            >
+              <div className="history-item-content">
+                <div 
+                  className="history-item-title" 
+                  onMouseEnter={(e) => handleTooltipEnter(e, chat.title)}
+                  onMouseLeave={handleTooltipLeave}
                 >
-                  <span className="icon">{chatMode.icon}</span>
-                  <span className="text">{chat.title}</span>
+                  {chat.title}
                 </div>
+                <div className="history-item-date">
+                  {new Date(chat.updatedAt).toLocaleDateString()}
+                </div>
+              </div>
+              <button 
+                className="history-edit-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditTitle(chat);
+                }}
+                title="제목 수정"
+              >
+                ✏️
+              </button>
+            </div>
               );
             })}
           </div>
@@ -402,72 +608,243 @@ const AiMentoringPage = () => {
             </div>
             <div className="modal-body">
 
-              <label className="input-group-label">플랫폼 선택</label>
-              <div className="platform-grid">
-                <div
-                  className={`platform-card ${tempPlatform === "baekjoon" ? "selected" : ""
-                    }`}
-                  onClick={() => {
-                    if (tempPlatform !== "baekjoon") {
-                      setTempPlatform("baekjoon");
-                      setTempProblemUrl("");
-                      setTempProblemText("");
-                    }
-                  }}
-                >
-                  <img src="/CodeGenie/assets/boj_logo.png" alt="Baekjoon" className="platform-logo" />
-                  <span className="platform-name">백준 (BOJ)</span>
-                </div>
-                <div
-                  className={`platform-card ${tempPlatform === "programmers" ? "selected" : ""
-                    }`}
-                  onClick={() => {
-                    if (tempPlatform !== "programmers") {
-                      setTempPlatform("programmers");
-                      setTempProblemUrl("");
-                      setTempProblemText("");
-                    }
-                  }}
-                >
-                  <img src="/CodeGenie/assets/pgm_logo.png" alt="Programmers" className="platform-logo" />
-                  <span className="platform-name">프로그래머스</span>
-                </div>
-              </div>
+              {problemStep === 'input' ? (
+                <div className="step-input">
+                  <label className="input-group-label">플랫폼 선택</label>
+                  <div className="platform-grid">
+                    <div
+                      className={`platform-card ${tempPlatform === "baekjoon" ? "selected" : ""}`}
+                      onClick={() => setTempPlatform("baekjoon")}
+                    >
+                      <img src="/CodeGenie/assets/boj_logo.png" alt="Baekjoon" className="platform-logo" />
+                      <span className="platform-name">백준 (BOJ)</span>
+                    </div>
+                    <div
+                      className={`platform-card ${tempPlatform === "programmers" ? "selected" : ""}`}
+                      onClick={() => setTempPlatform("programmers")}
+                    >
+                      <img src="/CodeGenie/assets/pgm_logo.png" alt="Programmers" className="platform-logo" />
+                      <span className="platform-name">프로그래머스</span>
+                    </div>
+                  </div>
 
-              <label className="input-group-label">문제 링크 또는 번호</label>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <input
-                  type="text"
-                  className="modal-input"
-                  value={tempProblemUrl}
-                  onChange={(e) => setTempProblemUrl(e.target.value)}
-                  placeholder={
-                    tempPlatform === "baekjoon"
-                      ? "예: 1000 또는 https://www.acmicpc.net/problem/1000"
-                      : "예: 문제 URL 또는 제목"
-                  }
-                  style={{ marginBottom: '1.5rem', flex: 1 }}
-                />
-                <button
-                  className="modal-btn save"
-                  style={{ height: '52px', whiteSpace: 'nowrap' }}
-                  onClick={handleFetchProblem}
-                  disabled={isFetching}
-                >
-                  {isFetching ? "가져오는 중..." : "가져오기"}
-                </button>
-              </div>
+                  <label className="input-group-label">문제 링크 또는 번호</label>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <input
+                      type="text"
+                      className="modal-input"
+                      value={tempProblemUrl}
+                      onChange={(e) => setTempProblemUrl(e.target.value)}
+                      placeholder={
+                        tempPlatform === "baekjoon"
+                          ? "예: 1000 또는 https://www.acmicpc.net/problem/1000"
+                          : "예: 문제 URL 또는 제목"
+                      }
+                      style={{ flex: 1 }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleFetchProblem();
+                      }}
+                    />
+                    <button
+                      className="modal-btn save"
+                      style={{ height: '42px', whiteSpace: 'nowrap' }}
+                      onClick={handleFetchProblem}
+                      disabled={isFetching}
+                    >
+                      {isFetching ? "분석 중..." : "가져오기"}
+                    </button>
+                  </div>
+                  
+                  <div className="divider" style={{ margin: '2rem 0', display: 'flex', alignItems: 'center', gap: '1rem', color: '#64748b' }}>
+                    <div style={{ flex: 1, height: '1px', background: 'linear-gradient(to right, transparent, #334155, transparent)' }}></div>
+                    <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>또는</span>
+                    <div style={{ flex: 1, height: '1px', background: 'linear-gradient(to right, transparent, #334155, transparent)' }}></div>
+                  </div>
 
-              <label className="input-group-label">
-                문제 내용 (직접 입력/메모)
-              </label>
-              <textarea
-                className="modal-textarea"
-                value={tempProblemText}
-                onChange={(e) => setTempProblemText(e.target.value)}
-                placeholder="문제의 핵심 내용이나 제약조건을 복사해두면 더 정확한 답변을 받을 수 있습니다."
-                rows="6"
-              />
+                  <button 
+                    className="modal-btn" 
+                    style={{ 
+                      width: '100%', 
+                      background: 'rgba(30, 41, 59, 0.5)', 
+                      border: '1px solid #475569',
+                      color: '#e2e8f0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      transition: 'all 0.2s',
+                      padding: '1rem'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.background = 'rgba(30, 41, 59, 0.8)';
+                      e.currentTarget.style.borderColor = '#94a3b8';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.background = 'rgba(30, 41, 59, 0.5)';
+                      e.currentTarget.style.borderColor = '#475569';
+                      e.currentTarget.style.transform = 'none';
+                    }}
+                    onClick={() => setProblemStep('review')}
+                  >
+                    <span style={{ fontSize: '1.2rem' }}>✏️</span> 
+                    <span style={{ fontWeight: '600' }}>직접 입력하기</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="step-review" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h4 style={{ margin: 0, color: '#3b82f6' }}>문제 정보 확인 및 수정</h4>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      {tempProblemUrl && (
+                        <button
+                          onClick={() => {
+                            let url = tempProblemUrl;
+                            if (tempPlatform === 'baekjoon' && /^\d+$/.test(url)) {
+                              url = `https://www.acmicpc.net/problem/${url}`;
+                            }
+                            window.open(url, '_blank');
+                          }}
+                          style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          title="원본 문제 새 창에서 열기"
+                        >
+                          🔗 원본 보기
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => setProblemStep('input')}
+                        style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '0.9rem' }}
+                      >
+                        ← 다시 가져오기
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="input-group-label">문제 제목</label>
+                    <input
+                      className="modal-input"
+                      value={tempProblemData.title || ""}
+                      onChange={(e) => setTempProblemData({ ...tempProblemData, title: e.target.value })}
+                      placeholder="문제 제목"
+                    />
+                  </div>
+
+                  <div className="info-grid">
+                    <div className="info-row">
+                      <div className="info-col">
+                        <label className="input-group-label">시간 제한</label>
+                        <input
+                          className="modal-input"
+                          value={tempProblemData.timeLimit || ""}
+                          onChange={(e) => setTempProblemData({ ...tempProblemData, timeLimit: e.target.value })}
+                          placeholder="예: 1초"
+                        />
+                      </div>
+                      <div className="info-col">
+                        <label className="input-group-label">메모리 제한</label>
+                        <input
+                          className="modal-input"
+                          value={tempProblemData.memoryLimit || ""}
+                          onChange={(e) => setTempProblemData({ ...tempProblemData, memoryLimit: e.target.value })}
+                          placeholder="예: 128MB"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="input-group-label">문제 설명</label>
+                    <textarea
+                      className="modal-textarea"
+                      value={tempProblemData.description || ""}
+                      onChange={(e) => setTempProblemData({ ...tempProblemData, description: e.target.value })}
+                      placeholder="문제 설명을 입력하세요."
+                      rows="8"
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label className="input-group-label">입력 형식</label>
+                      <textarea
+                        className="modal-textarea"
+                        value={tempProblemData.inputFormat || ""}
+                        onChange={(e) => setTempProblemData({ ...tempProblemData, inputFormat: e.target.value })}
+                        rows="4"
+                      />
+                    </div>
+                    <div>
+                      <label className="input-group-label">출력 형식</label>
+                      <textarea
+                        className="modal-textarea"
+                        value={tempProblemData.outputFormat || ""}
+                        onChange={(e) => setTempProblemData({ ...tempProblemData, outputFormat: e.target.value })}
+                        rows="4"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="input-group-label">예제 ({tempProblemData.examples?.length || 0})</label>
+                    <div className="examples-list">
+                      {(tempProblemData.examples || []).map((ex, idx) => (
+                        <div key={idx} className="example-item" style={{ marginBottom: '1rem', border: '1px solid #333', padding: '1rem', borderRadius: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>예제 {idx + 1}</span>
+                            <button 
+                              onClick={() => {
+                                const newExamples = [...tempProblemData.examples];
+                                newExamples.splice(idx, 1);
+                                setTempProblemData({ ...tempProblemData, examples: newExamples });
+                              }}
+                              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <textarea
+                              className="modal-textarea"
+                              value={ex.input || ""}
+                              onChange={(e) => {
+                                const newExamples = [...tempProblemData.examples];
+                                newExamples[idx].input = e.target.value;
+                                setTempProblemData({ ...tempProblemData, examples: newExamples });
+                              }}
+                              placeholder="입력"
+                              rows="2"
+                            />
+                            <textarea
+                              className="modal-textarea"
+                              value={ex.output || ""}
+                              onChange={(e) => {
+                                const newExamples = [...tempProblemData.examples];
+                                newExamples[idx].output = e.target.value;
+                                setTempProblemData({ ...tempProblemData, examples: newExamples });
+                              }}
+                              placeholder="출력"
+                              rows="2"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        className="modal-btn"
+                        style={{ width: '100%', marginTop: '0.5rem', backgroundColor: '#333', fontSize: '0.9rem' }}
+                        onClick={() => {
+                          setTempProblemData({
+                            ...tempProblemData,
+                            examples: [...(tempProblemData.examples || []), { input: "", output: "" }]
+                          });
+                        }}
+                      >
+                        + 예제 추가
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="modal-footer">
               <button
@@ -476,9 +853,11 @@ const AiMentoringPage = () => {
               >
                 취소
               </button>
-              <button className="modal-btn save" onClick={handleSaveProblem}>
-                저장
-              </button>
+              {problemStep === 'review' && (
+                <button className="modal-btn save" onClick={handleSaveProblem}>
+                  저장
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -559,6 +938,63 @@ const AiMentoringPage = () => {
               </button>
               <button className="modal-btn save" onClick={handleSaveCode}>
                 저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Custom Tooltip */}
+      {tooltip.visible && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: tooltip.y,
+            left: tooltip.x,
+            transform: 'translateY(-50%)',
+            background: 'rgba(15, 23, 42, 0.95)',
+            color: '#f1f5f9',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            fontWeight: '500',
+            pointerEvents: 'none',
+            zIndex: 10000,
+            border: '1px solid rgba(59, 130, 246, 0.2)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+            whiteSpace: 'nowrap',
+            maxWidth: '400px',
+            backdropFilter: 'blur(4px)',
+          }}
+        >
+          {tooltip.text}
+        </div>
+      )}
+
+      {/* Title Modal */}
+      {showTitleModal && (
+        <div className="modal-overlay" onClick={() => setShowTitleModal(false)}>
+          <div className="modal-content" style={{ width: '400px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{titleModalMode === 'create' ? '새 대화 시작' : '제목 수정'}</h3>
+              <button className="modal-close" onClick={() => setShowTitleModal(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <label className="input-group-label">대화 제목</label>
+              <input
+                className="modal-input"
+                value={tempTitle}
+                onChange={(e) => setTempTitle(e.target.value)}
+                placeholder="제목을 입력하세요"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleTitleSubmit();
+                }}
+              />
+            </div>
+            <div className="modal-footer">
+              <button className="modal-btn cancel" onClick={() => setShowTitleModal(false)}>취소</button>
+              <button className="modal-btn save" onClick={handleTitleSubmit}>
+                {titleModalMode === 'create' ? '시작하기' : '수정하기'}
               </button>
             </div>
           </div>
