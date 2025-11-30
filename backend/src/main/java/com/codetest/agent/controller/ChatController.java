@@ -22,7 +22,7 @@ public class ChatController {
     @PostMapping("/chat/start")
     public ApiResponse<Conversation> startChat(@RequestBody StartChatRequest request) {
         Conversation conversation = chatService.startChat(request.getMode(), request.getProblemText(),
-                request.getUserCode());
+                request.getUserCode(), request.getTitle());
         return ApiResponse.success(conversation, "대화가 시작되었습니다.");
     }
 
@@ -44,16 +44,37 @@ public class ChatController {
         return ApiResponse.success(conversation);
     }
 
+    @PutMapping("/chat/{id}")
+    public ApiResponse<Conversation> updateConversation(@PathVariable String id,
+            @RequestBody UpdateConversationRequest request) {
+        Conversation conversation = chatService.updateConversation(id, request.getProblemText(), request.getUserCode(),
+                request.getCodeLanguage(), request.getProblemSpec(), request.getPlatform(), request.getProblemUrl(),
+                request.getTitle());
+        return ApiResponse.success(conversation, "대화 정보가 업데이트되었습니다.");
+    }
+
     @Data
     static class StartChatRequest {
         private String mode;
         private String problemText;
         private String userCode;
+        private String title;
     }
 
     @Data
     static class SendMessageRequest {
         private String conversationId;
         private String content;
+    }
+
+    @Data
+    static class UpdateConversationRequest {
+        private String problemText;
+        private String userCode;
+        private String codeLanguage;
+        private com.codetest.agent.dto.ProblemSpec problemSpec;
+        private String platform;
+        private String problemUrl;
+        private String title;
     }
 }

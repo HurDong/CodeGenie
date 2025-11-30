@@ -17,8 +17,10 @@ public class Conversation {
     private String mode; // SOLUTION, COUNTEREXAMPLE, UNDERSTANDING
     private String problemText;
     private String userCode;
+    private String codeLanguage;
     private String platform; // baekjoon, programmers
     private String problemUrl;
+    private com.codetest.agent.dto.ProblemSpec problemSpec;
     private String status; // ongoing, resolved
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
