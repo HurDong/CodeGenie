@@ -54,4 +54,24 @@ export const api = {
     if (result.status === 'error') throw new Error(result.message);
     return result.data;
   },
+  
+  // Code Execution
+  executeCode: async (language, code) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/execute`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ language, code }),
+        });
+        if (!response.ok) {
+            throw new Error('Execution failed');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error executing code:', error);
+        throw error;
+    }
+  }
 };

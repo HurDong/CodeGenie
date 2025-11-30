@@ -12,6 +12,9 @@ services:
       - SPRING_DATA_MONGODB_HOST=mongodb
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - TZ=Asia/Seoul
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./temp:/app/temp # Mount temp directory for code files
     depends_on:
       - redis
     networks:
