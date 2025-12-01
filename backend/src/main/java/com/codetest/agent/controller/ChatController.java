@@ -27,9 +27,13 @@ public class ChatController {
     }
 
     @PostMapping("/chat/message")
-    public ApiResponse<Message> sendMessage(@RequestBody SendMessageRequest request) {
-        Message message = chatService.sendMessage(request.getConversationId(), request.getContent());
-        return ApiResponse.success(message);
+    public ResponseEntity<ApiResponse<Message>> sendMessage(@RequestBody SendMessageRequest request) {
+        try {
+            Message message = chatService.sendMessage(request.getConversationId(), request.getContent());
+            return ResponseEntity.ok(ApiResponse.success(message));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.error(e.getMessage()));
+        }
     }
 
     @GetMapping("/history")

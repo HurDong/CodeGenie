@@ -12,4 +12,6 @@ public class ExecutionResponse {
     private String error;
     private long executionTimeMs;
     private int exitCode;
+    private java.util.List<TestResult> testResults;
+    private boolean allPassed;
 }
