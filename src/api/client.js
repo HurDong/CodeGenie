@@ -20,7 +20,16 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ conversationId, content }),
     });
-    if (!response.ok) throw new Error('Failed to send message');
+    if (!response.ok) {
+      let errorMessage = 'Failed to send message';
+      try {
+        const result = await response.json();
+        if (result.message) errorMessage = result.message;
+      } catch (e) {
+        // ignore
+      }
+      throw new Error(errorMessage);
+    }
     const result = await response.json();
     if (result.status === 'error') throw new Error(result.message);
     return result.data;
@@ -54,24 +63,24 @@ export const api = {
     if (result.status === 'error') throw new Error(result.message);
     return result.data;
   },
-  
+
   // Code Execution
-  executeCode: async (language, code) => {
+  executeCode: async (language, code, testCases) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/execute`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ language, code }),
-        });
-        if (!response.ok) {
-            throw new Error('Execution failed');
-        }
-        return await response.json();
+      const response = await fetch(`${API_BASE_URL}/execute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ language, code, testCases }),
+      });
+      if (!response.ok) {
+        throw new Error('Execution failed');
+      }
+      return await response.json();
     } catch (error) {
-        console.error('Error executing code:', error);
-        throw error;
+      console.error('Error executing code:', error);
+      throw error;
     }
   }
 };

@@ -803,7 +803,8 @@ footer {
 /* Chat History Item Truncation */
 .history-item-content {
   flex: 1;
-  min-width: 0; /* Important for flex child truncation */
+  min-width: 0;
+  /* Important for flex child truncation */
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -2177,39 +2178,44 @@ footer {
   }
 
   .modal-btn {
-    padding: 0.7rem 1.5rem;
-    border-radius: 8px;
+    padding: 1rem 2rem;
+    border-radius: 12px;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 1rem;
     cursor: pointer;
-    transition: all 0.2s;
-    border: none;
+    transition: all 0.3s ease;
+    border: 2px solid;
     outline: none;
     font-family: inherit;
   }
 
   .modal-btn.cancel {
-    background: transparent;
+    background: rgba(30, 41, 59, 0.5);
     color: var(--text-muted);
-    border: 1.5px solid var(--glass-border);
+    border-color: var(--glass-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
 
   .modal-btn.cancel:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: var(--accent-color);
+    background: rgba(51, 65, 85, 0.7);
+    border-color: #64748b;
     color: var(--text-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
   .modal-btn.save {
     background: var(--accent-color);
     color: white;
-    border: 1.5px solid var(--accent-color);
+    border-color: var(--accent-color);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
   }
 
   .modal-btn.save:hover {
     background: #2563eb;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
-    transform: translateY(-1px);
+    border-color: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
   }
 
   /* Responsive Modal */
@@ -2665,18 +2671,18 @@ footer {
     }
   }
 
-/* Tooltip */
-.tooltip {
-  position: fixed;
-  background: rgba(15, 23, 42, 0.95);
-  color: #fff;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  pointer-events: none;
-  z-index: 10000;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  white-space: nowrap;
-  backdrop-filter: blur(4px);
-}
+  /* Tooltip */
+  .tooltip {
+    position: fixed;
+    background: rgba(15, 23, 42, 0.95);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    pointer-events: none;
+    z-index: 10000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+  }
