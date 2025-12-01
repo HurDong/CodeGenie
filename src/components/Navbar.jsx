@@ -90,7 +90,7 @@ const Navbar = () => {
     return (
         <nav className="navbar">
             <div className="logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-                <img src={`${import.meta.env.BASE_URL}assets/logo.png`} alt="CodeGenie Logo" className="logo-img" />
+                <img src={`${import.meta.env.BASE_URL}assets/logo.svg`} alt="CodeGenie Logo" className="logo-img" />
                 <div className="brand-name">Code<span>Genie</span></div>
             </div>
 

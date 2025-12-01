@@ -30,7 +30,7 @@ export default function DecryptedText({
   parentClassName = '',
   encryptedClassName = '',
   animateOn = 'hover', // 'hover' or 'view'
-  onAnimationComplete = () => {},
+  onAnimationComplete = () => { },
   style = {},
 }) {
   const [displayText, setDisplayText] = useState(text);
@@ -162,8 +162,8 @@ export default function DecryptedText({
   return (
     <motion.span
       ref={ref}
-      style={styles.wrapper}
-      className={parentClassName}
+      style={{ ...styles.wrapper, display: undefined }}
+      className={`inline-block ${parentClassName}`}
       onMouseEnter={handleMouseEnter}
       aria-label={text}
       role="button"
@@ -174,9 +174,8 @@ export default function DecryptedText({
       {displayText.split('').map((char, index) => (
         <span
           key={index}
-          className={`${
-            char === text[index] ? className : encryptedClassName
-          }`}
+          className={`${char === text[index] ? className : encryptedClassName
+            }`}
           style={style}
           aria-hidden="true"
         >

@@ -5,7 +5,7 @@ const ShinyText = ({ text, disabled = false, speed = 3, className = '' }) => {
 
   return (
     <div
-      className={`shiny-text ${disabled ? 'disabled' : ''} ${className}`}
+      className={`shiny-text inline-block ${disabled ? 'disabled' : ''} ${className}`}
       style={{ animationDuration }}
     >
       {text}
@@ -21,7 +21,7 @@ const ShinyText = ({ text, disabled = false, speed = 3, className = '' }) => {
           background-size: 200% 100%;
           -webkit-background-clip: text;
           background-clip: text;
-          display: inline-block;
+
           animation: shine 5s linear infinite;
           background-repeat: no-repeat;
         }
