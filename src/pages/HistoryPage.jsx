@@ -15,9 +15,22 @@ const HistoryPage = () => {
     const fetchHistory = async () => {
       try {
         const data = await api.getHistory();
-        setConversations(data);
+        if (Array.isArray(data)) {
+          const mappedData = data.map(item => ({
+            ...item,
+            topics: item.topics || [],
+            category: item.category || 'etc',
+            date: new Date(item.updatedAt || item.createdAt || Date.now()),
+            status: item.status || 'ongoing'
+          }));
+          setConversations(mappedData);
+        } else {
+          console.error("History data is not an array:", data);
+          setConversations([]);
+        }
       } catch (error) {
         console.error("Failed to fetch history:", error);
+        setConversations([]);
       }
     };
     fetchHistory();

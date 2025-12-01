@@ -83,7 +83,7 @@ const AiMentoringPage = () => {
   // Get current active chat
   const activeChat =
     chatSessions.find((chat) => chat.id === activeChatId) || chatSessions[0];
-  const messages = activeChat ? activeChat.messages : [];
+  const messages = activeChat?.messages || [];
   const currentMode =
     MODES[Object.keys(MODES).find((key) => MODES[key].id === activeMode)] ||
     MODES.SOLUTION;
@@ -94,19 +94,25 @@ const AiMentoringPage = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, activeChatId]);
+  }, [activeChatId, messages.length]); // Scroll when chat changes or new messages arrive
 
   // Fetch history on mount
   useEffect(() => {
     const fetchHistory = async () => {
       try {
         const history = await api.getHistory();
-        setChatSessions(history);
-        if (history.length > 0) {
-          setActiveChatId(history[0].id);
+        if (Array.isArray(history)) {
+          setChatSessions(history);
+          if (history.length > 0) {
+            setActiveChatId(history[0].id);
+          }
+        } else {
+            console.error("History is not an array:", history);
+            setChatSessions([]);
         }
       } catch (error) {
         console.error("Failed to fetch history:", error);
+        setChatSessions([]);
       }
     };
     fetchHistory();
@@ -114,10 +120,10 @@ const AiMentoringPage = () => {
 
   // Update mode when switching chats
   useEffect(() => {
-    if (activeChat) {
-      setActiveMode(activeChat.mode || MODES.SOLUTION.id);
+    if (activeChat?.mode) {
+      setActiveMode(activeChat.mode);
     }
-  }, [activeChatId, activeChat]);
+  }, [activeChat?.mode]);
 
   const handleNewChat = () => {
     setTempTitle("");
@@ -543,9 +549,9 @@ int main() {
                 </div>
                 <div className="message-content">
                   <div className="message-bubble">
-                    {msg.content.split("\n").map((line, i) => (
+                    {msg.content ? msg.content.split("\n").map((line, i) => (
                       <p key={i}>{line}</p>
-                    ))}
+                    )) : null}
                   </div>
                 </div>
               </div>
@@ -780,28 +786,30 @@ int main() {
                     />
                   </div>
 
-                  <div className="info-grid">
-                    <div className="info-row">
-                      <div className="info-col">
-                        <label className="input-group-label">시간 제한</label>
-                        <input
-                          className="modal-input"
-                          value={tempProblemData.timeLimit || ""}
-                          onChange={(e) => setTempProblemData({ ...tempProblemData, timeLimit: e.target.value })}
-                          placeholder="예: 1초"
-                        />
-                      </div>
-                      <div className="info-col">
-                        <label className="input-group-label">메모리 제한</label>
-                        <input
-                          className="modal-input"
-                          value={tempProblemData.memoryLimit || ""}
-                          onChange={(e) => setTempProblemData({ ...tempProblemData, memoryLimit: e.target.value })}
-                          placeholder="예: 128MB"
-                        />
+                  {tempPlatform !== 'programmers' && (
+                    <div className="info-grid">
+                      <div className="info-row">
+                        <div className="info-col">
+                          <label className="input-group-label">시간 제한</label>
+                          <input
+                            className="modal-input"
+                            value={tempProblemData.timeLimit || ""}
+                            onChange={(e) => setTempProblemData({ ...tempProblemData, timeLimit: e.target.value })}
+                            placeholder="예: 1초"
+                          />
+                        </div>
+                        <div className="info-col">
+                          <label className="input-group-label">메모리 제한</label>
+                          <input
+                            className="modal-input"
+                            value={tempProblemData.memoryLimit || ""}
+                            onChange={(e) => setTempProblemData({ ...tempProblemData, memoryLimit: e.target.value })}
+                            placeholder="예: 128MB"
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   <div>
                     <label className="input-group-label">문제 설명</label>
