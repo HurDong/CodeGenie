@@ -17,9 +17,10 @@ public class ChatService {
     private final ConversationRepository conversationRepository;
     private final LlmService llmService;
 
-    public Conversation startChat(String mode, String problemText, String userCode, String title) {
+    public Conversation startChat(String mode, String problemText, String userCode, String title, String userId) {
         Conversation conversation = new Conversation();
         conversation.setId(UUID.randomUUID().toString());
+        conversation.setUserId(userId);
         if (title != null && !title.isEmpty()) {
             conversation.setTitle(title);
         } else {
@@ -95,6 +96,10 @@ public class ChatService {
 
     public List<Conversation> getAllConversations() {
         return conversationRepository.findAllByOrderByUpdatedAtDesc();
+    }
+
+    public List<Conversation> getConversationsByUserId(String userId) {
+        return conversationRepository.findByUserIdOrderByUpdatedAtDesc(userId);
     }
 
     public Conversation getConversation(String id) {

@@ -138,23 +138,131 @@ public class ProblemController {
 
     private ProblemSpec parseProgrammers(String url) throws IOException {
         Document doc = Jsoup.connect(url)
-                .userAgent("Mozilla/5.0")
+                .userAgent(
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+                .referrer("https://school.programmers.co.kr/")
                 .get();
 
         ProblemSpec spec = new ProblemSpec();
         spec.setSource("PROGRAMMERS");
         spec.setTitle(doc.title());
 
-        // Try to find the problem description container
-        Element description = doc.selectFirst(".guide-section-description");
-        if (description != null) {
-            spec.setDescription(getFormattedText(description));
+        Element container = doc.selectFirst(".guide-section-description");
+        if (container != null) {
+            // 1. Try to parse Examples table first (it's usually reliable)
+            List<Example> examples = new ArrayList<>();
+            Element table = container.selectFirst("table");
+            if (table != null) {
+                examples.addAll(parseProgrammersExamples(table));
+            }
+            spec.setExamples(examples);
+            if (!examples.isEmpty()) {
+                spec.setInputFormat("See examples below.");
+                spec.setOutputFormat("See examples below.");
+            }
+
+            // 2. Try structured parsing for Description and Constraints
+            StringBuilder descriptionBuilder = new StringBuilder();
+            StringBuilder constraintsBuilder = new StringBuilder();
+
+            boolean foundConstraints = false;
+            String currentSection = "DESCRIPTION";
+
+            for (Element child : container.children()) {
+                String text = child.text().trim();
+
+                // Skip the table if we already parsed it
+                if (child.tagName().equals("table"))
+                    continue;
+
+                // Header detection
+                boolean isHeader = child.tagName().matches("h[1-6]") || child.tagName().equals("strong")
+                        || text.equals("제한사항") || text.equals("제한 사항")
+                        || text.startsWith("입출력 예");
+
+                if (isHeader) {
+                    if (text.contains("제한사항") || text.contains("제한 사항")) {
+                        currentSection = "CONSTRAINTS";
+                        foundConstraints = true;
+                        continue;
+                    } else if (text.contains("입출력 예")) {
+                        currentSection = "EXAMPLES"; // We already parsed table, so just ignore or capture text
+                        continue;
+                    } else if (text.contains("문제 설명")) {
+                        currentSection = "DESCRIPTION";
+                        continue;
+                    }
+                }
+
+                if ("DESCRIPTION".equals(currentSection)) {
+                    descriptionBuilder.append(getFormattedText(child)).append("\n");
+                } else if ("CONSTRAINTS".equals(currentSection)) {
+                    String formatted = getFormattedText(child);
+                    if (!formatted.startsWith("-") && !formatted.isEmpty()) {
+                        constraintsBuilder.append("- ").append(formatted).append("\n");
+                    } else {
+                        constraintsBuilder.append(formatted).append("\n");
+                    }
+                }
+            }
+
+            spec.setDescription(descriptionBuilder.toString().trim());
+            spec.setConstraints(constraintsBuilder.toString().trim());
+
+            // 3. Fallback: If constraints are empty, try splitting the full text
+            if (!foundConstraints || spec.getConstraints().isEmpty()) {
+                String fullText = getFormattedText(container);
+
+                // Simple regex split
+                String[] parts = fullText.split("제한사항|제한 사항");
+                if (parts.length > 1) {
+                    spec.setDescription(parts[0].trim());
+
+                    String rest = parts[1];
+                    String[] constraintParts = rest.split("입출력 예");
+                    if (constraintParts.length > 0) {
+                        spec.setConstraints(constraintParts[0].trim());
+                    }
+                }
+            }
+
         } else {
             spec.setDescription(
                     "Could not retrieve full description (Programmers problems may require a browser to view).");
         }
 
         return spec;
+    }
+
+    private List<Example> parseProgrammersExamples(Element table) {
+        List<Example> examples = new ArrayList<>();
+        Elements rows = table.select("tr");
+
+        if (rows.size() > 1) {
+            for (int i = 1; i < rows.size(); i++) {
+                Element row = rows.get(i);
+                Elements cols = row.select("td");
+
+                if (cols.isEmpty())
+                    continue;
+
+                Example example = new Example();
+
+                String output = cols.last().text();
+                example.setOutput(output);
+
+                StringBuilder inputBuilder = new StringBuilder();
+                for (int j = 0; j < cols.size() - 1; j++) {
+                    if (j > 0)
+                        inputBuilder.append(", ");
+                    inputBuilder.append(cols.get(j).text());
+                }
+                example.setInput(inputBuilder.toString());
+
+                examples.add(example);
+            }
+        }
+        return examples;
     }
 
     private String getFormattedText(Element element) {
@@ -170,7 +278,6 @@ public class ProblemController {
         clone.select("tr").before("{{NEWLINE}}");
         clone.select("td, th").after(" ");
 
-        // Handle images
         // Handle images
         for (Element img : clone.select("img")) {
             img.replaceWith(new org.jsoup.nodes.TextNode("[Image]"));
