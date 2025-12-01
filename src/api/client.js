@@ -1,11 +1,19 @@
 const API_BASE_URL = '/api';
 
+const getHeaders = () => {
+  const token = localStorage.getItem('accessToken');
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  };
+};
+
 export const api = {
   // Chat
   startChat: async (mode, problemText, userCode, title) => {
     const response = await fetch(`${API_BASE_URL}/chat/start`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify({ mode, problemText, userCode, title }),
     });
     if (!response.ok) throw new Error('Failed to start chat');
@@ -17,7 +25,7 @@ export const api = {
   sendMessage: async (conversationId, content) => {
     const response = await fetch(`${API_BASE_URL}/chat/message`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify({ conversationId, content }),
     });
     if (!response.ok) throw new Error('Failed to send message');
@@ -29,7 +37,7 @@ export const api = {
   updateConversation: async (id, data) => {
     const response = await fetch(`${API_BASE_URL}/chat/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getHeaders(),
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error('Failed to update conversation');
@@ -40,7 +48,9 @@ export const api = {
 
   // History
   getHistory: async () => {
-    const response = await fetch(`${API_BASE_URL}/history`);
+    const response = await fetch(`${API_BASE_URL}/history`, {
+      headers: getHeaders()
+    });
     if (!response.ok) throw new Error('Failed to fetch history');
     const result = await response.json();
     if (result.status === 'error') throw new Error(result.message);
@@ -48,7 +58,9 @@ export const api = {
   },
 
   getConversation: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/history/${id}`);
+    const response = await fetch(`${API_BASE_URL}/history/${id}`, {
+      headers: getHeaders()
+    });
     if (!response.ok) throw new Error('Failed to fetch conversation');
     const result = await response.json();
     if (result.status === 'error') throw new Error(result.message);
@@ -60,9 +72,7 @@ export const api = {
     try {
         const response = await fetch(`${API_BASE_URL}/execute`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: getHeaders(),
             body: JSON.stringify({ language, code }),
         });
         if (!response.ok) {
