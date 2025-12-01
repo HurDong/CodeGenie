@@ -42,7 +42,7 @@ class ChatServiceTest {
         when(conversationRepository.save(any(Conversation.class))).thenAnswer(i -> i.getArguments()[0]);
 
         // When
-        Conversation result = chatService.startChat(mode, problem, code);
+        Conversation result = chatService.startChat(mode, problem, code, null);
 
         // Then
         assertNotNull(result.getId());
