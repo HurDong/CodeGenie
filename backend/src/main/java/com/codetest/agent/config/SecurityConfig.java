@@ -45,9 +45,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/parse").permitAll() // Allow problem parsing without login
                         .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception
-                        .defaultAuthenticationEntryPointFor(
-                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                                new AntPathRequestMatcher("/api/**")))
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oauth2 -> oauth2
