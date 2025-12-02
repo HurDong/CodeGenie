@@ -17,32 +17,38 @@ import 'prismjs/themes/prism-okaidia.css'; // Dark theme
 import "./CodeEditor.css"; // Code editor styles
 import UserProfile from "../components/UserProfile";
 import SpotlightCard from "../components/ui/SpotlightCard";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Mode configurations
 const MODES = {
-  COUNTEREXAMPLE: {
-    id: "counterexample",
-    name: "반례 생성",
-    icon: "🧪",
-    description: "코드의 오류를 찾는 반례 제시",
-    placeholder: "질문을 입력하세요...",
-    color: "#ef4444",
+  UNDERSTANDING: {
+    id: "understanding",
+    name: "문제 파악",
+    icon: "🏗️",
+    description: "문제의 핵심을 파악하고 이해",
+    placeholder: "문제를 요약하거나 예제를 질문하세요...",
+    color: "#10b981",
+    subModes: [
+      { id: "understanding_summary", name: "핵심 요약", description: "문제의 핵심 입력/출력 정의" },
+      { id: "understanding_trace", name: "예제 분석", description: "입출력 과정 시뮬레이션" },
+      { id: "understanding_hint", name: "힌트/알고리즘", description: "풀이 방향성 및 알고리즘 추천" }
+    ]
   },
   SOLUTION: {
     id: "solution",
     name: "단계별 풀이",
     icon: "🧩",
     description: "문제 해결 전략을 단계별로 안내",
-    placeholder: "질문을 입력하세요...",
+    placeholder: "풀이 과정에 대해 질문하세요...",
     color: "#3b82f6",
   },
-  UNDERSTANDING: {
-    id: "understanding",
-    name: "문제 이해",
-    icon: "🏗️",
-    description: "문제를 구조화하여 이해",
-    placeholder: "질문을 입력하세요...",
-    color: "#10b981",
+  COUNTEREXAMPLE: {
+    id: "counterexample",
+    name: "반례/디버깅",
+    icon: "🧪",
+    description: "코드의 오류를 찾는 반례 제시",
+    placeholder: "코드를 입력하고 반례를 요청하세요...",
+    color: "#ef4444",
   },
 };
 
@@ -60,7 +66,7 @@ const AiMentoringPage = () => {
   const [activeChatId, setActiveChatId] = useState(null);
 
 
-  const [activeMode, setActiveMode] = useState(MODES.SOLUTION.id);
+  const [activeMode, setActiveMode] = useState(MODES.UNDERSTANDING.subModes[0].id); // Default to summary
   const [input, setInput] = useState("");
   const [showProblemModal, setShowProblemModal] = useState(false);
   const [showCodeModal, setShowCodeModal] = useState(false);
@@ -102,9 +108,15 @@ const AiMentoringPage = () => {
   const activeChat =
     chatSessions.find((chat) => chat.id === activeChatId) || chatSessions[0];
   const messages = activeChat?.messages || [];
-  const currentMode =
-    MODES[Object.keys(MODES).find((key) => MODES[key].id === activeMode)] ||
-    MODES.SOLUTION;
+  // Helper to find parent mode
+  const getParentMode = (modeId) => {
+    if (modeId.startsWith("understanding")) return MODES.UNDERSTANDING;
+    if (modeId === "solution") return MODES.SOLUTION;
+    if (modeId === "counterexample") return MODES.COUNTEREXAMPLE;
+    return MODES.UNDERSTANDING;
+  };
+
+  const currentParentMode = getParentMode(activeMode);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -432,9 +444,44 @@ int main() {
     }
   };
 
-  const handleSendMessage = async (e) => {
+    const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
+
+    // Validation Logic
+    const hasProblem = activeChat?.problemText || activeChat?.problemSpec;
+    const hasCode = activeChat?.userCode;
+    const isUnderstanding = activeMode.startsWith("understanding");
+    const isSolution = activeMode === "solution";
+    const isCounterexample = activeMode === "counterexample";
+
+    if ((isUnderstanding || isSolution) && !hasProblem) {
+      toast.error("이 모드를 사용하려면 먼저 '문제'를 입력해야 합니다.", {
+        icon: "📄",
+        duration: 4000
+      });
+      handleOpenProblemModal();
+      return;
+    }
+
+    if (isCounterexample) {
+      if (!hasProblem) {
+        toast.error("반례를 찾으려면 '문제' 정보가 필요합니다.", {
+          icon: "📄",
+          duration: 4000
+        });
+        handleOpenProblemModal();
+        return;
+      }
+      if (!hasCode) {
+        toast.error("반례를 찾으려면 '코드' 정보가 필요합니다.", {
+          icon: "⚡",
+          duration: 4000
+        });
+        handleOpenCodeModal();
+        return;
+      }
+    }
 
     let currentChatId = activeChatId;
     const userMessageContent = input;
@@ -642,28 +689,83 @@ int main() {
           </div>
 
           <div className="input-area">
+            {/* Sub-mode Selector for Understanding */}
+            <AnimatePresence>
+              {currentParentMode.id === "understanding" && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, y: 10 }}
+                  animate={{ opacity: 1, height: "auto", y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: 10 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="sub-mode-selector"
+                  style={{
+                    display: 'flex',
+                    gap: '8px',
+                    marginBottom: '12px',
+                    padding: '0 4px',
+                    overflow: 'hidden'
+                  }}
+                >
+                  {MODES.UNDERSTANDING.subModes.map((subMode) => (
+                    <motion.button
+                      key={subMode.id}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`sub-mode-btn ${activeMode === subMode.id ? "active" : ""}`}
+                      onClick={() => handleModeChange(subMode.id)}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '16px',
+                        border: activeMode === subMode.id ? '1px solid #10b981' : '1px solid #334155',
+                        background: activeMode === subMode.id ? 'rgba(16, 185, 129, 0.1)' : 'rgba(30, 41, 59, 0.5)',
+                        color: activeMode === subMode.id ? '#10b981' : '#94a3b8',
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        transition: 'border-color 0.2s, background-color 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                      title={subMode.description}
+                    >
+                      <span>{subMode.id === 'understanding_summary' ? '📖' : subMode.id === 'understanding_trace' ? '🧩' : '💡'}</span>
+                      {subMode.name}
+                    </motion.button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Mode Selector and Context Controls */}
             <div className="controls-row">
               <div className="mode-selector">
-                {Object.values(MODES).map((mode) => (
-                  <button
-                    key={mode.id}
-                    className={`mode-btn ${activeMode === mode.id ? "active" : ""
-                      }`}
-                    onClick={() => handleModeChange(mode.id)}
-                    title={mode.description}
-                    style={{
-                      "--mode-color": mode.color,
-                    }}
-                  >
-                    <span className="mode-icon">{mode.icon}</span>
-                    <span className="mode-name">{mode.name}</span>
-                  </button>
-                ))}
+                {Object.values(MODES).map((mode) => {
+                  const isActive = currentParentMode.id === mode.id;
+                  return (
+                    <button
+                      key={mode.id}
+                      className={`mode-btn ${isActive ? "active" : ""}`}
+                      onClick={() => {
+                        // If switching to understanding, default to summary
+                        if (mode.id === "understanding") {
+                          handleModeChange("understanding_summary");
+                        } else {
+                          handleModeChange(mode.id);
+                        }
+                      }}
+                      title={mode.description}
+                      style={{
+                        "--mode-color": mode.color,
+                      }}
+                    >
+                      <span className="mode-icon">{mode.icon}</span>
+                      <span className="mode-name">{mode.name}</span>
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Context Status Indicators */}
-              {/* Context Status Indicators - New IDE Style */}
               <div className="ide-controls">
                 <button
                   className={`ide-btn ${activeChat?.problemText ? "active" : ""}`}
@@ -686,11 +788,13 @@ int main() {
               </div>
             </div>
 
+
+
             <form onSubmit={handleSendMessage} className="input-form">
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={currentMode.placeholder}
+                placeholder={currentParentMode.placeholder}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
