@@ -86,7 +86,7 @@ function App() {
     <AuthProvider>
       <Router basename={import.meta.env.BASE_URL}>
         <div className="App">
-          <Toaster 
+          <Toaster
             position="top-center"
             containerStyle={{
               zIndex: 99999,
@@ -96,6 +96,8 @@ function App() {
                 background: '#1e293b',
                 color: '#fff',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
+                maxWidth: '500px',
+                wordBreak: 'keep-all',
               },
               success: {
                 iconTheme: {

@@ -418,30 +418,38 @@ int main() {
     e.preventDefault();
     if (!input.trim()) return;
 
-    const currentChatId = activeChatId;
+    let currentChatId = activeChatId;
     const userMessageContent = input;
     setInput("");
 
-    // Optimistic update
     const tempMessage = {
       role: "user",
       content: userMessageContent,
       timestamp: new Date().toISOString()
     };
 
-    setChatSessions((prevSessions) =>
-      prevSessions.map((chat) => {
-        if (chat.id === currentChatId) {
-          return {
-            ...chat,
-            messages: [...chat.messages, tempMessage],
-          };
-        }
-        return chat;
-      })
-    );
-
     try {
+      // If no active chat, create one first
+      if (!currentChatId) {
+        const newChat = await api.startChat(activeMode, "", "", "새로운 대화");
+        setChatSessions((prev) => [newChat, ...prev]);
+        setActiveChatId(newChat.id);
+        currentChatId = newChat.id;
+      }
+
+      // Optimistic update
+      setChatSessions((prevSessions) =>
+        prevSessions.map((chat) => {
+          if (chat.id === currentChatId) {
+            return {
+              ...chat,
+              messages: [...(chat.messages || []), tempMessage],
+            };
+          }
+          return chat;
+        })
+      );
+
       const aiMessage = await api.sendMessage(currentChatId, userMessageContent);
 
       setChatSessions((prevSessions) =>
@@ -506,41 +514,51 @@ int main() {
             <span>+</span> 새로운 대화
           </div>
           <div className="history-list">
-            {chatSessions.map((chat) => {
-              const chatMode =
-                MODES[
-                Object.keys(MODES).find((key) => MODES[key].id === chat.mode)
-                ] || MODES.SOLUTION;
-              return (
-                <div
-                  key={chat.id}
-                  className={`history-item ${chat.id === activeChatId ? "active" : ""
-                    }`}
-                  onClick={() => setActiveChatId(chat.id)}
-                >
-                  <div className="history-item-content">
-                    <div
-                      className="history-item-title"
-                    >
-                      {chat.title}
-                    </div>
-                    <div className="history-item-date">
-                      {new Date(chat.updatedAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <button
-                    className="history-edit-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditTitle(chat);
-                    }}
-                    title="제목 수정"
+            {chatSessions.length === 0 ? (
+              <div className="empty-history">
+                <div className="empty-icon">💬</div>
+                <p>아직 대화가 없습니다.</p>
+                <button className="start-chat-btn" onClick={handleNewChat}>
+                  새 대화 시작하기
+                </button>
+              </div>
+            ) : (
+              chatSessions.map((chat) => {
+                const chatMode =
+                  MODES[
+                  Object.keys(MODES).find((key) => MODES[key].id === chat.mode)
+                  ] || MODES.SOLUTION;
+                return (
+                  <div
+                    key={chat.id}
+                    className={`history-item ${chat.id === activeChatId ? "active" : ""
+                      }`}
+                    onClick={() => setActiveChatId(chat.id)}
                   >
-                    ✏️
-                  </button>
-                </div>
-              );
-            })}
+                    <div className="history-item-content">
+                      <div
+                        className="history-item-title"
+                      >
+                        {chat.title}
+                      </div>
+                      <div className="history-item-date">
+                        {new Date(chat.updatedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <button
+                      className="history-edit-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditTitle(chat);
+                      }}
+                      title="제목 수정"
+                    >
+                      ✏️
+                    </button>
+                  </div>
+                );
+              })
+            )}
           </div>
           <UserProfile />
         </aside>
@@ -919,25 +937,25 @@ int main() {
                       </button>
                     </div>
                   </div>
-              )}
-            </div>
-            <div className="modal-footer">
-              <button
-                className="modal-btn cancel"
-                onClick={() => setShowProblemModal(false)}
-              >
-                취소
-              </button>
-              {problemStep === 'review' && (
-                <button className="modal-btn save" onClick={handleSaveProblem}>
-                  저장하기
+                )}
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="modal-btn cancel"
+                  onClick={() => setShowProblemModal(false)}
+                >
+                  취소
                 </button>
-              )}
+                {problemStep === 'review' && (
+                  <button className="modal-btn save" onClick={handleSaveProblem}>
+                    저장하기
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-  )
-}
+        )
+      }
 
       {/* Code Modal */}
       {
