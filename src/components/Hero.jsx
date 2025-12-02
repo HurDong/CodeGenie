@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import GridMotion from './ui/GridMotion';
+import AuroraBackground from './ui/AuroraBackground';
 import ShinyText from './ui/ShinyText';
 import DecryptedText from './ui/DecryptedText';
+import SlotMachineText from './ui/SlotMachineText';
+import CodingVisual from './ui/CodingVisual';
 
 const Hero = () => {
     const heroRef = useRef(null);
@@ -50,36 +52,51 @@ const Hero = () => {
     };
 
     return (
-        <section id="hero" className="hero-section" ref={heroRef} style={{ overflow: 'hidden' }}>
-            {/* Background Animation */}
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
-                <GridMotion items={[
-                    'Java', 'Python', 'C++', 'Spring', 'React', 'Docker', 'AWS', 'Git',
-                    'Algorithm', 'Data Structure', 'SQL', 'NoSQL', 'Redis', 'Kafka',
-                    'CI/CD', 'Kubernetes', 'Microservices', 'REST API', 'GraphQL', 'Oauth',
-                    'Clean Code', 'TDD', 'DDD', 'Design Patterns', 'Refactoring', 'Testing'
-                ]} />
-            </div>
+        <AuroraBackground>
+            <section id="hero" className="hero-section" ref={heroRef} style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 2% 12% 0.2%' }}>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    maxWidth: '95%', // Increased width to push content to edges
+                    gap: '4rem',
+                }}>
+                    {/* Left Content */}
+                    <div className="hero-content" style={{ position: 'relative', zIndex: 10, textAlign: 'left', flex: 1 }}>
+                        <h1 className="hero-title">
+                            <span className="block mb-2 text-5xl font-bold">
+                                <span style={{
+                                    background: 'linear-gradient(to right, #fcd34d, #fb923c)', // amber-300 to orange-400
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    display: 'inline-block'
+                                }}>사고력</span>
+                                <span style={{ color: '#94a3b8' }}>을 깨우는</span>
+                            </span>
+                            <SlotMachineText
+                                text="CodeGenie"
+                                speed={50}
+                                lockInDelay={150}
+                                className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400"
+                                parentClassName="block text-7xl font-extrabold mt-4"
+                            />
+                        </h1>
+                        <p className="hero-subtitle">
+                            단순한 정답이 아닌, 깊이 있는 문제 이해와<br />
+                            논리적 사고 확장을 돕는 당신의 AI 코딩 멘토
+                        </p>
+                        <button className="cta-button" onClick={scrollToDemo}>무료로 체험하기</button>
+                    </div>
 
-            <div className="hero-content" style={{ position: 'relative', zIndex: 10 }}>
-                <h1 className="hero-title">
-                    <ShinyText text="사고력을 깨우는" speed={3} className="block mb-2 text-5xl font-bold" />
-                    <DecryptedText 
-                        text="CodeGenie"
-                        speed={100}
-                        maxIterations={20}
-                        className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400"
-                        parentClassName="block text-7xl font-extrabold mt-4"
-                        revealDirection="center"
-                    />
-                </h1>
-                <p className="hero-subtitle">
-                    단순한 정답이 아닌, 깊이 있는 문제 이해와<br />
-                    논리적 사고 확장을 돕는 당신의 AI 코딩 멘토
-                </p>
-                <button className="cta-button" onClick={scrollToDemo}>무료로 체험하기</button>
-            </div>
-        </section>
+                    {/* Right Visual */}
+                    <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <CodingVisual />
+                    </div>
+                </div>
+            </section>
+        </AuroraBackground>
     );
 };
 
