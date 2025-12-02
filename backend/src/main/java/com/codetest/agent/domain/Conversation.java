@@ -13,6 +13,7 @@ import java.util.List;
 public class Conversation {
     @Id
     private String id;
+    private String userId;
     private String title;
     private String mode; // SOLUTION, COUNTEREXAMPLE, UNDERSTANDING
     private String problemText;

@@ -6,8 +6,10 @@ import com.codetest.agent.dto.ApiResponse;
 import com.codetest.agent.service.ChatService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
@@ -20,9 +22,10 @@ public class ChatController {
     private final ChatService chatService;
 
     @PostMapping("/chat/start")
-    public ApiResponse<Conversation> startChat(@RequestBody StartChatRequest request) {
+    public ApiResponse<Conversation> startChat(@RequestBody StartChatRequest request, Principal principal) {
+        String userId = principal != null ? principal.getName() : "anonymous";
         Conversation conversation = chatService.startChat(request.getMode(), request.getProblemText(),
-                request.getUserCode(), request.getTitle());
+                request.getUserCode(), request.getTitle(), userId);
         return ApiResponse.success(conversation, "대화가 시작되었습니다.");
     }
 
@@ -37,8 +40,9 @@ public class ChatController {
     }
 
     @GetMapping("/history")
-    public ApiResponse<List<Conversation>> getHistory() {
-        List<Conversation> history = chatService.getAllConversations();
+    public ApiResponse<List<Conversation>> getHistory(Principal principal) {
+        String userId = principal != null ? principal.getName() : "anonymous";
+        List<Conversation> history = chatService.getConversationsByUserId(userId);
         return ApiResponse.success(history);
     }
 

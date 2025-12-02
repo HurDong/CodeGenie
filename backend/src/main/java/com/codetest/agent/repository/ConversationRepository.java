@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface ConversationRepository extends MongoRepository<Conversation, String> {
     List<Conversation> findAllByOrderByUpdatedAtDesc();
+
+    List<Conversation> findByUserIdOrderByUpdatedAtDesc(String userId);
 }

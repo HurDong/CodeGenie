@@ -85,7 +85,7 @@ const AiMentoringPage = () => {
   // Get current active chat
   const activeChat =
     chatSessions.find((chat) => chat.id === activeChatId) || chatSessions[0];
-  const messages = activeChat ? activeChat.messages : [];
+  const messages = activeChat?.messages || [];
   const currentMode =
     MODES[Object.keys(MODES).find((key) => MODES[key].id === activeMode)] ||
     MODES.SOLUTION;
@@ -96,19 +96,25 @@ const AiMentoringPage = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, activeChatId]);
+  }, [activeChatId, messages.length]); // Scroll when chat changes or new messages arrive
 
   // Fetch history on mount
   useEffect(() => {
     const fetchHistory = async () => {
       try {
         const history = await api.getHistory();
-        setChatSessions(history);
-        if (history.length > 0) {
-          setActiveChatId(history[0].id);
+        if (Array.isArray(history)) {
+          setChatSessions(history);
+          if (history.length > 0) {
+            setActiveChatId(history[0].id);
+          }
+        } else {
+          console.error("History is not an array:", history);
+          setChatSessions([]);
         }
       } catch (error) {
         console.error("Failed to fetch history:", error);
+        setChatSessions([]);
       }
     };
     fetchHistory();
@@ -116,10 +122,10 @@ const AiMentoringPage = () => {
 
   // Update mode when switching chats
   useEffect(() => {
-    if (activeChat) {
-      setActiveMode(activeChat.mode || MODES.SOLUTION.id);
+    if (activeChat?.mode) {
+      setActiveMode(activeChat.mode);
     }
-  }, [activeChatId, activeChat]);
+  }, [activeChat?.mode]);
 
   const handleNewChat = () => {
     setTempTitle("");
@@ -549,9 +555,9 @@ int main() {
                 </div>
                 <div className="message-content">
                   <div className="message-bubble">
-                    {msg.content.split("\n").map((line, i) => (
+                    {msg.content ? msg.content.split("\n").map((line, i) => (
                       <p key={i}>{line}</p>
-                    ))}
+                    )) : null}
                   </div>
                 </div>
               </div>
@@ -913,25 +919,25 @@ int main() {
                       </button>
                     </div>
                   </div>
-                )}
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="modal-btn cancel"
-                  onClick={() => setShowProblemModal(false)}
-                >
-                  취소
-                </button>
-                {problemStep === 'review' && (
-                  <button className="modal-btn save" onClick={handleSaveProblem}>
-                    저장하기
-                  </button>
-                )}
-              </div>
+              )}
             </div>
-          </div >
-        )
-      }
+            <div className="modal-footer">
+              <button
+                className="modal-btn cancel"
+                onClick={() => setShowProblemModal(false)}
+              >
+                취소
+              </button>
+              {problemStep === 'review' && (
+                <button className="modal-btn save" onClick={handleSaveProblem}>
+                  저장하기
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+  )
+}
 
       {/* Code Modal */}
       {

@@ -10,4 +10,14 @@ public class CodeGenieApplication {
         SpringApplication.run(CodeGenieApplication.class, args);
     }
 
+    @org.springframework.context.annotation.Bean
+    public org.springframework.boot.CommandLineRunner commandLineRunner(org.springframework.core.env.Environment env) {
+        return args -> {
+            String clientId = env.getProperty("GOOGLE_CLIENT_ID");
+            System.out.println("==================================================");
+            System.out.println("Loaded GOOGLE_CLIENT_ID: " + clientId);
+            System.out.println("==================================================");
+        };
+    }
+
 }
