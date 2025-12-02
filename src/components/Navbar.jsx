@@ -46,7 +46,7 @@ const Navbar = () => {
             toast.error(error);
             return;
         }
-        
+
         try {
             await login(email, password);
             setIsLoginOpen(false);
@@ -176,7 +176,7 @@ const Navbar = () => {
                             <button type="submit" className="login-btn">
                                 {isRegisterMode ? '회원가입' : '로그인'}
                             </button>
-                            
+
                             <div className="auth-actions" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
                                 <div className="toggle-mode">
                                     {isRegisterMode ? (

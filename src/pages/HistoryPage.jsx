@@ -58,7 +58,7 @@ const HistoryPage = () => {
   // Filter conversations
   const filteredConversations = conversations.filter(conv => {
     const matchesSearch = conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         conv.topics.some(topic => topic.toLowerCase().includes(searchQuery.toLowerCase()));
+      conv.topics.some(topic => topic.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesFilter = selectedFilter === 'all' || conv.category === selectedFilter;
     return matchesSearch && matchesFilter;
   });
@@ -82,7 +82,7 @@ const HistoryPage = () => {
       const uniqueDates = [...new Set(dates)];
       const today = new Date();
       const todayTime = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-      
+
       // 오늘 또는 어제부터 시작하는지 확인
       const oneDayMs = 24 * 60 * 60 * 1000;
       let streak = 0;
@@ -118,7 +118,7 @@ const HistoryPage = () => {
 
       const uniqueDates = [...new Set(dates)];
       const oneDayMs = 24 * 60 * 60 * 1000;
-      
+
       let maxStreak = 0;
       let currentStreak = 1;
 
@@ -140,7 +140,7 @@ const HistoryPage = () => {
     const now = new Date();
     const diff = now - date;
     const hours = Math.floor(diff / (1000 * 60 * 60));
-    
+
     if (hours < 24) {
       return `${hours}시간 전`;
     } else if (hours < 48) {
@@ -157,7 +157,7 @@ const HistoryPage = () => {
   return (
     <div className="history-page">
       <Navbar />
-      
+
       <div className="history-container">
         {/* Header */}
         <div className="history-header">
