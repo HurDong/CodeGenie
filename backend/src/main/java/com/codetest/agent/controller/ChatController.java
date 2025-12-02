@@ -61,6 +61,12 @@ public class ChatController {
         return ApiResponse.success(conversation, "대화 정보가 업데이트되었습니다.");
     }
 
+    @DeleteMapping("/chat/{id}")
+    public ApiResponse<Void> deleteConversation(@PathVariable String id) {
+        chatService.deleteConversation(id);
+        return ApiResponse.success(null, "대화가 삭제되었습니다.");
+    }
+
     @Data
     static class StartChatRequest {
         private String mode;

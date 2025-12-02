@@ -127,4 +127,8 @@ public class ChatService {
         conversation.setUpdatedAt(LocalDateTime.now());
         return conversationRepository.save(conversation);
     }
+
+    public void deleteConversation(String id) {
+        conversationRepository.deleteById(id);
+    }
 }

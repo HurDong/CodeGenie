@@ -55,6 +55,17 @@ export const api = {
     return result.data;
   },
 
+  deleteConversation: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/chat/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete conversation');
+    const result = await response.json();
+    if (result.status === 'error') throw new Error(result.message);
+    return result.data;
+  },
+
   // History
   getHistory: async () => {
     const response = await fetch(`${API_BASE_URL}/history`, {

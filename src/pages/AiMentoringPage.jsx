@@ -78,6 +78,10 @@ const AiMentoringPage = () => {
   const [tempTitle, setTempTitle] = useState("");
   const [targetChatId, setTargetChatId] = useState(null);
 
+  // Delete Confirmation Modal State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState(null);
+
   const messagesEndRef = useRef(null);
 
 
@@ -504,6 +508,37 @@ int main() {
     }
   };
 
+  const handleDeleteChat = (chatId, e) => {
+    e.stopPropagation();
+    setDeleteTargetId(chatId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteChat = async () => {
+    if (!deleteTargetId) return;
+
+    try {
+      await api.deleteConversation(deleteTargetId);
+      setChatSessions((prev) => prev.filter((chat) => chat.id !== deleteTargetId));
+
+      if (activeChatId === deleteTargetId) {
+        const remainingChats = chatSessions.filter((chat) => chat.id !== deleteTargetId);
+        if (remainingChats.length > 0) {
+          setActiveChatId(remainingChats[0].id);
+        } else {
+          setActiveChatId(null);
+        }
+      }
+      toast.success("대화가 삭제되었습니다.");
+    } catch (error) {
+      console.error("Failed to delete chat:", error);
+      toast.error("대화 삭제 실패");
+    } finally {
+      setShowDeleteModal(false);
+      setDeleteTargetId(null);
+    }
+  };
+
   return (
     <div className="ai-mentoring-page">
       <Navbar />
@@ -545,16 +580,25 @@ int main() {
                         {new Date(chat.updatedAt).toLocaleDateString()}
                       </div>
                     </div>
-                    <button
-                      className="history-edit-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditTitle(chat);
-                      }}
-                      title="제목 수정"
-                    >
-                      ✏️
-                    </button>
+                    <div className="history-actions">
+                      <button
+                        className="history-btn edit"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditTitle(chat);
+                        }}
+                        title="제목 수정"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        className="history-btn delete"
+                        onClick={(e) => handleDeleteChat(chat.id, e)}
+                        title="대화 삭제"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </div>
                 );
               })
@@ -1274,6 +1318,35 @@ int main() {
                 <button className="modal-btn cancel" onClick={() => setShowTitleModal(false)}>취소</button>
                 <button className="modal-btn save" onClick={handleTitleSubmit}>
                   {titleModalMode === 'create' ? '시작하기' : '저장하기'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+      {/* Delete Confirmation Modal */}
+      {
+        showDeleteModal && (
+          <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
+            <div className="modal-content small" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>🗑️ 대화 삭제</h3>
+                <button className="modal-close" onClick={() => setShowDeleteModal(false)}>✕</button>
+              </div>
+              <div className="modal-body">
+                <p style={{ color: '#cbd5e1', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+                  정말로 이 대화를 삭제하시겠습니까?<br />
+                  <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>삭제된 대화는 복구할 수 없습니다.</span>
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button className="modal-btn cancel" onClick={() => setShowDeleteModal(false)}>취소</button>
+                <button
+                  className="modal-btn delete"
+                  onClick={confirmDeleteChat}
+                  style={{ background: '#ef4444', borderColor: '#ef4444' }}
+                >
+                  삭제하기
                 </button>
               </div>
             </div>

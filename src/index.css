@@ -2577,3 +2577,50 @@ footer {
   box-shadow: 0 6px 20px var(--accent-glow);
   background: #2563eb;
 }
+
+/* History Item Actions */
+.history-item {
+  position: relative;
+  padding-right: 3.5rem; /* Space for buttons */
+}
+
+.history-actions {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.history-item:hover .history-actions {
+  opacity: 1;
+}
+
+.history-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.history-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.history-btn.delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* Hide original edit button as it is now in actions */
+.history-edit-btn {
+  display: none !important;
+}
