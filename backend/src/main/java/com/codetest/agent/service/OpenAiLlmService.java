@@ -22,8 +22,15 @@ public class OpenAiLlmService implements LlmService {
 
     @Override
     public String getResponse(String prompt) {
+        return getChatResponse(List.of(
+                Map.of("role", "system", "content", "You are CodeGenie, a helpful AI coding mentor."),
+                Map.of("role", "user", "content", prompt)));
+    }
+
+    @Override
+    public String getChatResponse(List<Map<String, Object>> messages) {
         if (apiKey == null || apiKey.isEmpty()) {
-            return "⚠️ OpenAI API Key가 설정되지 않았습니다. (Mock Response: " + prompt + ")";
+            return "⚠️ OpenAI API Key가 설정되지 않았습니다. (Mock Response)";
         }
 
         String url = "https://api.openai.com/v1/chat/completions";
@@ -34,9 +41,7 @@ public class OpenAiLlmService implements LlmService {
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", "gpt-3.5-turbo");
-        requestBody.put("messages", List.of(
-                Map.of("role", "system", "content", "You are CodeGenie, a helpful AI coding mentor."),
-                Map.of("role", "user", "content", prompt)));
+        requestBody.put("messages", messages);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 

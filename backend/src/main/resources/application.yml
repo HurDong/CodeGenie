@@ -1,6 +1,9 @@
 spring:
   application:
     name: codegenie-backend
+  ai:
+    openai:
+      api-key: ${SPRING_AI_OPENAI_API_KEY}
   data:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:localhost}

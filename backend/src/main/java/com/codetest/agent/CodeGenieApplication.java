@@ -11,7 +11,8 @@ public class CodeGenieApplication {
     }
 
     @org.springframework.context.annotation.Bean
-    public org.springframework.boot.CommandLineRunner commandLineRunner(org.springframework.core.env.Environment env) {
+    public static org.springframework.boot.CommandLineRunner commandLineRunner(
+            org.springframework.core.env.Environment env) {
         return args -> {
             String clientId = env.getProperty("GOOGLE_CLIENT_ID");
             System.out.println("==================================================");
