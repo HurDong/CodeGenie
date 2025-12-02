@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import Navbar from "../components/Navbar";
 import "../index.css";
@@ -14,6 +16,7 @@ import 'prismjs/components/prism-cpp';
 import 'prismjs/themes/prism-okaidia.css'; // Dark theme
 import "./CodeEditor.css"; // Code editor styles
 import UserProfile from "../components/UserProfile";
+import SpotlightCard from "../components/ui/SpotlightCard";
 
 // Mode configurations
 const MODES = {
@@ -44,6 +47,15 @@ const MODES = {
 };
 
 const AiMentoringPage = () => {
+  const { isLoggedIn, loading } = useAuth();
+  const navigate = useNavigate();
+  const [showLoginAlert, setShowLoginAlert] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !isLoggedIn) {
+      setShowLoginAlert(true);
+    }
+  }, [loading, isLoggedIn]);
   const [chatSessions, setChatSessions] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
 
@@ -104,6 +116,8 @@ const AiMentoringPage = () => {
 
   // Fetch history on mount
   useEffect(() => {
+    if (loading || !isLoggedIn) return;
+
     const fetchHistory = async () => {
       try {
         const history = await api.getHistory();
@@ -122,7 +136,7 @@ const AiMentoringPage = () => {
       }
     };
     fetchHistory();
-  }, []);
+  }, [loading, isLoggedIn]);
 
   // Update mode when switching chats
   useEffect(() => {
@@ -1350,6 +1364,34 @@ int main() {
                 </button>
               </div>
             </div>
+          </div>
+        )
+      }
+
+      {/* Login Required Modal */}
+      {
+        showLoginAlert && (
+          <div className="modal-overlay" style={{ zIndex: 9999, backdropFilter: 'blur(8px)', backgroundColor: 'rgba(0, 0, 0, 0.7)' }}>
+            <SpotlightCard className="modal-content small" spotlightColor="rgba(59, 130, 246, 0.4)" style={{ border: '1px solid rgba(255,255,255,0.3)', background: '#1e293b', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)' }}>
+              <div className="modal-header" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <h3>🔒 로그인 필요</h3>
+              </div>
+              <div className="modal-body">
+                <p style={{ color: '#cbd5e1', marginBottom: '1.5rem', lineHeight: '1.6' }}>
+                  AI 멘토링 서비스는 로그인 후 이용 가능합니다.<br />
+                  <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>메인 화면으로 이동합니다.</span>
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="modal-btn save"
+                  onClick={() => navigate('/')}
+                  style={{ width: '100%', background: '#3b82f6', border: 'none' }}
+                >
+                  확인
+                </button>
+              </div>
+            </SpotlightCard>
           </div>
         )
       }
