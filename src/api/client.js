@@ -8,12 +8,35 @@ const getHeaders = () => {
   };
 };
 
+const handleAuthError = () => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('user');
+  localStorage.removeItem('isLoggedIn');
+  window.location.href = '/';
+};
+
+const fetchWithAuth = async (url, options = {}) => {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...getHeaders(),
+      ...options.headers
+    }
+  });
+
+  if (response.status === 401) {
+    handleAuthError();
+    throw new Error('Session expired');
+  }
+
+  return response;
+};
+
 export const api = {
   // Chat
   startChat: async (mode, problemText, userCode, title) => {
-    const response = await fetch(`${API_BASE_URL}/chat/start`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/chat/start`, {
       method: 'POST',
-      headers: getHeaders(),
       body: JSON.stringify({ mode, problemText, userCode, title }),
     });
     if (!response.ok) throw new Error('Failed to start chat');
@@ -23,9 +46,8 @@ export const api = {
   },
 
   sendMessage: async (conversationId, content) => {
-    const response = await fetch(`${API_BASE_URL}/chat/message`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/chat/message`, {
       method: 'POST',
-      headers: getHeaders(),
       body: JSON.stringify({ conversationId, content }),
     });
     if (!response.ok) {
@@ -44,9 +66,8 @@ export const api = {
   },
 
   updateConversation: async (id, data) => {
-    const response = await fetch(`${API_BASE_URL}/chat/${id}`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/chat/${id}`, {
       method: 'PUT',
-      headers: getHeaders(),
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error('Failed to update conversation');
@@ -56,9 +77,8 @@ export const api = {
   },
 
   deleteConversation: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/chat/${id}`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/chat/${id}`, {
       method: 'DELETE',
-      headers: getHeaders(),
     });
     if (!response.ok) throw new Error('Failed to delete conversation');
     const result = await response.json();
@@ -68,9 +88,7 @@ export const api = {
 
   // History
   getHistory: async () => {
-    const response = await fetch(`${API_BASE_URL}/history`, {
-      headers: getHeaders()
-    });
+    const response = await fetchWithAuth(`${API_BASE_URL}/history`);
     if (!response.ok) throw new Error('Failed to fetch history');
     const result = await response.json();
     if (result.status === 'error') throw new Error(result.message);
@@ -78,9 +96,7 @@ export const api = {
   },
 
   getConversation: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/history/${id}`, {
-      headers: getHeaders()
-    });
+    const response = await fetchWithAuth(`${API_BASE_URL}/history/${id}`);
     if (!response.ok) throw new Error('Failed to fetch conversation');
     const result = await response.json();
     if (result.status === 'error') throw new Error(result.message);
@@ -90,11 +106,11 @@ export const api = {
   // Code Execution
   executeCode: async (language, code, testCases) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/execute`, {
+      const response = await fetchWithAuth(`${API_BASE_URL}/execute`, {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify({ language, code, testCases }),
       });
+      return await response.json();
     } catch (error) {
       console.error('Error executing code:', error);
       throw error;

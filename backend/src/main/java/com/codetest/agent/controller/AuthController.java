@@ -25,4 +25,11 @@ public class AuthController {
     public ResponseEntity<AuthDto.AuthResponse> login(@RequestBody AuthDto.LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
+
+    @org.springframework.web.bind.annotation.PutMapping("/profile")
+    public ResponseEntity<AuthDto.AuthResponse> updateProfile(
+            @RequestBody AuthDto.UpdateProfileRequest request,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+        return ResponseEntity.ok(authService.updateProfile(userDetails.getUsername(), request));
+    }
 }

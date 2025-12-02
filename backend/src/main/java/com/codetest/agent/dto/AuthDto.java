@@ -34,4 +34,12 @@ public class AuthDto {
         private String email;
         private String name;
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UpdateProfileRequest {
+        private String name;
+        private String email;
+    }
 }

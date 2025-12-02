@@ -39,6 +39,16 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const updateProfile = async (name, email) => {
+        try {
+            const data = await authService.updateProfile(name, email);
+            setUser(data);
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    };
+
     const loginWithToken = (accessToken, refreshToken, userData) => {
         const user = { ...userData, accessToken, refreshToken };
         authService.setSession(accessToken, user);
@@ -53,7 +63,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoggedIn, login, register, loginWithToken, logout, loading }}>
+        <AuthContext.Provider value={{ user, isLoggedIn, login, register, updateProfile, loginWithToken, logout, loading }}>
             {children}
         </AuthContext.Provider>
     );

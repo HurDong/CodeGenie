@@ -1,56 +1,96 @@
-import axios from 'axios';
+const API_BASE_URL = '/api/auth';
 
-const API_URL = '/api/auth';
-
-// Create axios instance with interceptor to add token
-const api = axios.create({
-    baseURL: API_URL,
-});
-
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('accessToken');
-        if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
-
-export const login = async (email, password) => {
-    const response = await api.post('/login', { email, password });
-    if (response.data.accessToken) {
-        localStorage.setItem('accessToken', response.data.accessToken);
-        localStorage.setItem('user', JSON.stringify(response.data));
-    }
-    return response.data;
+const getHeaders = () => {
+    const token = localStorage.getItem('accessToken');
+    return {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    };
 };
 
 export const register = async (email, password, name) => {
-    const response = await api.post('/register', { email, password, name });
-    if (response.data.accessToken) {
-        localStorage.setItem('accessToken', response.data.accessToken);
-        localStorage.setItem('user', JSON.stringify(response.data));
+    const response = await fetch(`${API_BASE_URL}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Registration failed');
     }
-    return response.data;
+
+    const data = await response.json();
+    const user = { email: data.email, name: data.name };
+    setSession(data.accessToken, user);
+    return user;
+};
+
+export const login = async (email, password) => {
+    const response = await fetch(`${API_BASE_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Login failed');
+    }
+
+    const data = await response.json();
+    const user = { email: data.email, name: data.name };
+    setSession(data.accessToken, user);
+    return user;
+};
+
+export const updateProfile = async (name, email) => {
+    const response = await fetch(`${API_BASE_URL}/profile`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ name, email }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Profile update failed');
+    }
+
+    const data = await response.json();
+    const user = { email: data.email, name: data.name };
+
+    // Update session if new token is provided
+    if (data.accessToken) {
+        setSession(data.accessToken, user);
+    } else {
+        // Update user in local storage
+        const currentUser = getCurrentUser();
+        const updatedUser = { ...currentUser, ...user };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+
+    return user;
 };
 
 export const logout = () => {
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
-    localStorage.removeItem('isLoggedIn'); // Clear legacy flag
+    localStorage.removeItem('isLoggedIn');
 };
 
 export const getCurrentUser = () => {
-    return JSON.parse(localStorage.getItem('user'));
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
+    try {
+        return JSON.parse(userStr);
+    } catch (e) {
+        return null;
+    }
 };
 
 export const setSession = (accessToken, user) => {
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('isLoggedIn', 'true');
 };
-
-export default api;
