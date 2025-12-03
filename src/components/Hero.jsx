@@ -53,16 +53,8 @@ const Hero = () => {
 
     return (
         <AuroraBackground>
-            <section id="hero" className="hero-section" ref={heroRef} style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 2% 12% 0.2%' }}>
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                    maxWidth: '95%', // Increased width to push content to edges
-                    gap: '4rem',
-                }}>
+            <section id="hero" className="hero-section" ref={heroRef}>
+                <div className="hero-container">
                     {/* Left Content */}
                     <div className="hero-content" style={{ position: 'relative', zIndex: 10, textAlign: 'left', flex: 1 }}>
                         <h1 className="hero-title">

@@ -18,22 +18,8 @@ export const AuroraBackground = ({ children, className = "", ...props }) => {
 
     return (
         <motion.section
-            style={{
-                backgroundImage,
-                height: '100vh',
-                width: '100%',
-                position: 'relative',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-                backgroundColor: '#020617', // slate-950
-                color: '#e2e8f0', // slate-200
-                scrollSnapAlign: 'start',
-                scrollSnapStop: 'always',
-            }}
-            className={className}
+            style={{ backgroundImage }}
+            className={`aurora-background ${className}`}
             {...props}
         >
             <div style={{
