@@ -18,6 +18,10 @@ import "./CodeEditor.css"; // Code editor styles
 import UserProfile from "../components/UserProfile";
 import SpotlightCard from "../components/ui/SpotlightCard";
 import { motion, AnimatePresence } from "framer-motion";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 // Mode configurations
 const MODES = {
@@ -99,6 +103,9 @@ const AiMentoringPage = () => {
   // Delete Confirmation Modal State
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
+
+  // Mobile Sidebar State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const messagesEndRef = useRef(null);
 
@@ -605,7 +612,8 @@ int main() {
       <Navbar />
       <div className="chat-layout">
         {/* Sidebar - Chat History */}
-        <aside className="chat-sidebar">
+        {/* Sidebar - Chat History */}
+        <aside className={`chat-sidebar ${isSidebarOpen ? 'active' : ''}`}>
           <div className="new-chat-btn" onClick={handleNewChat}>
             <span>+</span> 새로운 대화
           </div>
@@ -670,7 +678,16 @@ int main() {
 
         {/* Main Chat Area */}
         <main className="chat-main">
-          <div className="messages-container">
+          {/* Mobile Sidebar Toggle */}
+          <button 
+            className="mobile-sidebar-toggle"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            style={{ display: 'none' }} // Hidden by default, shown via CSS media query
+          >
+            {isSidebarOpen ? '✕' : '☰'}
+          </button>
+
+          <div className="messages-container" onClick={() => setIsSidebarOpen(false)}>
             {messages.map((msg) => (
               <div key={msg.id} className={`message-wrapper ${msg.role}`}>
                 <div className="message-avatar">
@@ -678,9 +695,36 @@ int main() {
                 </div>
                 <div className="message-content">
                   <div className="message-bubble">
-                    {msg.content ? msg.content.split("\n").map((line, i) => (
-                      <p key={i}>{line}</p>
-                    )) : null}
+                    {msg.role === "assistant" ? (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          code({ node, inline, className, children, ...props }) {
+                            const match = /language-(\w+)/.exec(className || '');
+                            return !inline && match ? (
+                              <SyntaxHighlighter
+                                style={vscDarkPlus}
+                                language={match[1]}
+                                PreTag="div"
+                                {...props}
+                              >
+                                {String(children).replace(/\n$/, '')}
+                              </SyntaxHighlighter>
+                            ) : (
+                              <code className={className} {...props}>
+                                {children}
+                              </code>
+                            );
+                          }
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    ) : (
+                      msg.content.split("\n").map((line, i) => (
+                        <p key={i}>{line}</p>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
