@@ -1,5 +1,9 @@
 {
   "appId": "com.hurdong.codegenie",
   "appName": "CodeGenie",
-  "webDir": "dist"
+  "webDir": "dist",
+  "server": {
+    "cleartext": true,
+    "androidScheme": "http"
+  }
 }

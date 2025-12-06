@@ -1,6 +1,16 @@
-🐛 fix: Fix mobile layout and overflow issues in Landing page
+✨ feat: Initialize Capacitor for Android mobile app
 
-랜딩 페이지의 모바일 레이아웃 깨짐 및 오버플로우 문제를 수정했습니다.
-- Hero 섹션의 인라인 스타일을 CSS 클래스로 변경하여 반응형 적용
-- AuroraBackground 높이 설정을 수정하여 모바일에서 콘텐츠 잘림 방지
-- 데스크탑 스크롤 스냅과 모바일 유동적 높이 호환성 확보
+기존 웹 프로젝트에 Capacitor를 도입하여 모바일 앱(Android)으로 전환할 수 있도록 구현했습니다.
+
+1. Capacitor 및 Android 플랫폼 추가
+   - `@capacitor/core`, `@capacitor/cli`, `@capacitor/android` 의존성 설치
+   - `android` 플랫폼 디렉토리 생성 및 초기화
+   - `capacitor.config.json` 설정 파일 생성
+
+2. Android 에뮬레이터 환경 대응
+   - `local.properties` 생성하여 SDK 경로 자동 설정
+   - `src/api/client.js` 및 `src/api/authService.js`에 플랫폼 감지 로직 추가
+   - 에뮬레이터 환경(Native)일 경우 API Base URL을 `10.0.2.2:8080`으로 자동 전환하도록 수정
+
+3. Google 로그인 호환성 개선
+   - `Navbar.jsx`에서 Capacitor 플랫폼 감지를 통해 에뮬레이터용 OAuth 리디렉션 URL 분기 처리

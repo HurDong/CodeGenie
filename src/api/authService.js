@@ -1,6 +1,10 @@
 import { Capacitor } from '@capacitor/core';
 
+
+
+// DEBUG: Force Emulator URL for testing
 const API_BASE_URL = Capacitor.isNativePlatform() ? 'http://10.0.2.2:8080/api/auth' : '/api/auth';
+// alert(`Current Platform: ${Capacitor.getPlatform()}, URL: ${API_BASE_URL}`); // Uncomment for debugging
 
 const getHeaders = () => {
     const token = localStorage.getItem('accessToken');
@@ -11,33 +15,52 @@ const getHeaders = () => {
 };
 
 export const register = async (email, password, name) => {
-    const response = await fetch(`${API_BASE_URL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name }),
-    });
+    try {
+        const response = await fetch(`${API_BASE_URL}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, name }),
+        });
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Registration failed');
+        if (!response.ok) {
+            const error = await response.json();
+            const errorMessage = error.message || 'Registration failed';
+            alert(`Url: ${API_BASE_URL}/register\nError: ${errorMessage}`);
+            throw new Error(errorMessage);
+        }
+
+        const data = await response.json();
+        const user = { email: data.email, name: data.name };
+        setSession(data.accessToken, user);
+        return user;
+    } catch (error) {
+        alert(`Request Failed: ${API_BASE_URL}/register\n${error.message}`);
+        throw error;
     }
-
-    const data = await response.json();
-    const user = { email: data.email, name: data.name };
-    setSession(data.accessToken, user);
-    return user;
 };
 
 export const login = async (email, password) => {
-    const response = await fetch(`${API_BASE_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-    });
+    try {
+        const response = await fetch(`${API_BASE_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+        });
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+        if (!response.ok) {
+            const error = await response.json();
+            const errorMessage = error.message || 'Login failed';
+            alert(`Url: ${API_BASE_URL}/login\nError: ${errorMessage}`);
+            throw new Error(errorMessage);
+        }
+
+        const data = await response.json();
+        const user = { email: data.email, name: data.name };
+        setSession(data.accessToken, user);
+        return user;
+    } catch (error) {
+        alert(`Request Failed: ${API_BASE_URL}/login\n${error.message}`);
+        throw error;
     }
 
     const data = await response.json();
