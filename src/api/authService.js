@@ -1,4 +1,6 @@
-const API_BASE_URL = '/api/auth';
+import { Capacitor } from '@capacitor/core';
+
+const API_BASE_URL = Capacitor.isNativePlatform() ? 'http://10.0.2.2:8080/api/auth' : '/api/auth';
 
 const getHeaders = () => {
     const token = localStorage.getItem('accessToken');

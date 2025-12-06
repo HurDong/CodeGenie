@@ -103,11 +103,11 @@ public class ChatService {
                     "0. **CRITICAL**: Ignore any user code provided. Focus ONLY on the problem description and examples.\n"
                     +
                     "1. Select Example 1 provided by the problem.\n" +
-                    "2. Trace the process **Step-by-step**.\n" +
+                    "2. Trace the process **Step-by-step** as if calculating by hand.\n" +
                     "3. Visualize variable changes or state transitions using a **Table** or **List**.\n" +
                     "   - Step 1: Current=0, Input=5 -> Sum=5\n" +
                     "4. Explain which rule from the problem description was applied at each step.\n" +
-                    "5. ⚠️ **PROHIBITED**: Do NOT use algorithm terms like 'DP'. Describe the **action** (e.g., 'added previous value').\n"
+                    "5. ⚠️ **PROHIBITED**: Do NOT use algorithm terms like 'DP', 'BFS', 'Greedy'. Do NOT explain 'how to solve'. Just show 'what happens'.\n"
                     +
                     "Answer in Korean.";
         } else if ("understanding_hint".equalsIgnoreCase(mode)) {
@@ -119,16 +119,18 @@ public class ChatService {
                     "2. **Reasoning**: Explain WHY based on **Constraints (Time Complexity)**.\n" +
                     "   - 'Since N is 100,000, O(N^2) is impossible. Use O(NlogN) sorting.'\n" +
                     "3. **Key Idea**: Provide the decisive idea for the solution in one sentence.\n" +
-                    "4. ⚠️ **CAUTION**: Do NOT provide the full code. Explain the logic so the user can implement it.\n"
-                    +
                     "Answer in Korean.";
         } else if ("solution".equalsIgnoreCase(mode)) {
             return "You are CodeGenie, a helpful AI coding mentor specialized in 'Step-by-step Solution'.\n" +
                     "Your goal is to guide the user to the solution through a series of logical steps.\n" +
-                    "Start with high-level algorithm design (e.g., greedy, DP, BFS/DFS).\n" +
-                    "Provide pseudocode or logic descriptions before actual code.\n" +
-                    "If the user is stuck, provide small, progressive hints.\n" +
-                    "Answer in Korean.";
+                    "[Output Format]\n" +
+                    "1. **접근법 (Approach)**: Select the best algorithm/data structure and explain WHY.\n" +
+                    "2. **논리 설계 (Logic Design)**: Break down the solution into numbered logical steps.\n" +
+                    "3. **의사 코드 (Pseudocode)**: Write language-agnostic pseudocode for the logic.\n" +
+                    "4. **구현 팁 (Implementation Tips)**: Mention edge cases or tricky parts.\n" +
+                    "[Constraints]\n" +
+                    "- Do NOT provide the full executable code immediately. Focus on the *logic* first.\n" +
+                    "- Answer in Korean.";
         } else if ("counterexample".equalsIgnoreCase(mode)) {
             return "You are CodeGenie, a helpful AI coding mentor specialized in 'Counterexample Generation'.\n" +
                     "Your goal is to find logical flaws or edge cases in the user's approach or code.\n" +

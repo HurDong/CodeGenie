@@ -76,7 +76,10 @@ const Navbar = () => {
     };
 
     const handleGoogleLogin = () => {
-        window.location.href = 'http://localhost:8080/oauth2/authorization/google';
+        import('@capacitor/core').then(({ Capacitor }) => {
+            const baseUrl = Capacitor.isNativePlatform() ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
+            window.location.href = `${baseUrl}/oauth2/authorization/google`;
+        });
     };
 
     const handleLogout = (e) => {

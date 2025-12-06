@@ -890,14 +890,14 @@ int main() {
                         className={`platform-card ${tempPlatform === "baekjoon" ? "selected" : ""}`}
                         onClick={() => setTempPlatform("baekjoon")}
                       >
-                        <img src="/CodeGenie/assets/boj_logo.png" alt="Baekjoon" className="platform-logo" />
+                        <img src="/assets/boj_logo.png" alt="Baekjoon" className="platform-logo" />
                         <span className="platform-name">백준 (BOJ)</span>
                       </div>
                       <div
                         className={`platform-card ${tempPlatform === "programmers" ? "selected" : ""}`}
                         onClick={() => setTempPlatform("programmers")}
                       >
-                        <img src="/CodeGenie/assets/pgm_logo.png" alt="Programmers" className="platform-logo" />
+                        <img src="/assets/pgm_logo.png" alt="Programmers" className="platform-logo" />
                         <span className="platform-name">프로그래머스</span>
                       </div>
                     </div>

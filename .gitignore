@@ -47,3 +47,6 @@ backend/gradlew
 backend/gradlew.bat
 backend/gradle/
 *.iml
+
+# Secrets
+*.key

@@ -1,0 +1,63 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: codegenie-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./dist:/usr/share/nginx/html
+    depends_on:
+      - backend
+    networks:
+      - codegenie-network
+    restart: always
+
+  backend:
+    build: ./backend
+    container_name: codegenie-backend
+    environment:
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_DATA_MONGODB_HOST=mongodb
+      - SPRING_AI_OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - TZ=Asia/Seoul
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./temp:/app/temp
+    depends_on:
+      - redis
+      - mongodb
+    networks:
+      - codegenie-network
+    restart: always
+
+  redis:
+    image: redis:alpine
+    container_name: codegenie-redis
+    environment:
+      - TZ=Asia/Seoul
+    networks:
+      - codegenie-network
+    restart: always
+
+  mongodb:
+    image: mongo:latest
+    container_name: codegenie-mongodb
+    environment:
+      - MONGO_INITDB_DATABASE=codegenie
+      - TZ=Asia/Seoul
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - codegenie-network
+    restart: always
+
+networks:
+  codegenie-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
