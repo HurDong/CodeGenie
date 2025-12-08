@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import toast from 'react-hot-toast';
 
 
 
@@ -25,7 +26,7 @@ export const register = async (email, password, name) => {
         if (!response.ok) {
             const error = await response.json();
             const errorMessage = error.message || 'Registration failed';
-            alert(`Url: ${API_BASE_URL}/register\nError: ${errorMessage}`);
+            toast.error(errorMessage);
             throw new Error(errorMessage);
         }
 
@@ -34,7 +35,8 @@ export const register = async (email, password, name) => {
         setSession(data.accessToken, user);
         return user;
     } catch (error) {
-        alert(`Request Failed: ${API_BASE_URL}/register\n${error.message}`);
+        toast.error(`오류가 발생했습니다: ${error.message}`);
+        console.error(`Request Failed: ${API_BASE_URL}/register`, error);
         throw error;
     }
 };
@@ -50,7 +52,7 @@ export const login = async (email, password) => {
         if (!response.ok) {
             const error = await response.json();
             const errorMessage = error.message || 'Login failed';
-            alert(`Url: ${API_BASE_URL}/login\nError: ${errorMessage}`);
+            toast.error(errorMessage);
             throw new Error(errorMessage);
         }
 
@@ -59,7 +61,8 @@ export const login = async (email, password) => {
         setSession(data.accessToken, user);
         return user;
     } catch (error) {
-        alert(`Request Failed: ${API_BASE_URL}/login\n${error.message}`);
+        toast.error(`로그인 오류: ${error.message}`);
+        console.error(`Request Failed: ${API_BASE_URL}/login`, error);
         throw error;
     }
 
