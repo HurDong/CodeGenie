@@ -21,6 +21,7 @@ public class Conversation {
     private String codeLanguage;
     private String platform; // baekjoon, programmers
     private String problemUrl;
+    private String strategy; // AI's persisted strategy roadmap
     private com.codetest.agent.dto.ProblemSpec problemSpec;
     private String status; // ongoing, resolved
     private LocalDateTime createdAt;

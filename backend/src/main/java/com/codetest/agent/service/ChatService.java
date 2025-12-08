@@ -39,6 +39,10 @@ public class ChatService {
         String greeting = "안녕하세요! " + mode + " 모드로 도와드리겠습니다.";
         conversation.getMessages().add(new Message("assistant", greeting, LocalDateTime.now()));
 
+        if ("solution".equalsIgnoreCase(mode)) {
+            conversation.setStrategy("1. Understand Input -> 2. Design Algorithm -> 3. Implement -> 4. Review");
+        }
+
         return conversationRepository.save(conversation);
     }
 
@@ -54,7 +58,17 @@ public class ChatService {
         List<Map<String, Object>> messages = new ArrayList<>();
 
         // 1. System Prompt
-        messages.add(Map.of("role", "system", "content", getSystemPrompt(conversation.getMode())));
+        String systemPrompt = getSystemPrompt(conversation.getMode());
+        if ("solution".equalsIgnoreCase(conversation.getMode()) && conversation.getStrategy() != null) {
+            systemPrompt += "\n\n[CURRENT STRATEGY ANCHOR]\n" +
+                    "Your agreed-upon strategy is: \"" + conversation.getStrategy() + "\"\n" +
+                    "1. Follow this roadmap.\n" +
+                    "2. If the user suggests a valid alternative, YOU MUST update the strategy by appending this tag at the end of your response:\n"
+                    +
+                    "   `[UPDATE_STRATEGY: New Strategy Steps...]`\n" +
+                    "3. If the user's suggestion is invalid, explain why and stick to the current strategy.";
+        }
+        messages.add(Map.of("role", "system", "content", systemPrompt));
 
         // 2. Context (Problem & Code)
         String context = buildContextString(conversation);
@@ -75,7 +89,25 @@ public class ChatService {
         }
 
         String aiResponseContent = llmService.getChatResponse(messages);
-        Message aiMessage = new Message("assistant", aiResponseContent, LocalDateTime.now());
+
+        // [Strategy Anchor] Detect and update strategy
+        if (conversation.getMode().equalsIgnoreCase("solution") && aiResponseContent.contains("[UPDATE_STRATEGY:")) {
+            try {
+                int startIdx = aiResponseContent.indexOf("[UPDATE_STRATEGY:");
+                int endIdx = aiResponseContent.indexOf("]", startIdx);
+                if (endIdx > startIdx) {
+                    String newStrategy = aiResponseContent.substring(startIdx + 17, endIdx).trim();
+                    conversation.setStrategy(newStrategy);
+                    // Remove the hidden tag from the message shown to user
+                    aiResponseContent = aiResponseContent.substring(0, startIdx)
+                            + aiResponseContent.substring(endIdx + 1);
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to parse strategy update: " + e.getMessage());
+            }
+        }
+
+        Message aiMessage = new Message("assistant", aiResponseContent.trim(), LocalDateTime.now());
         conversation.getMessages().add(aiMessage);
 
         conversation.setUpdatedAt(LocalDateTime.now());
