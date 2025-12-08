@@ -121,15 +121,25 @@ public class ChatService {
                     "3. **Key Idea**: Provide the decisive idea for the solution in one sentence.\n" +
                     "Answer in Korean.";
         } else if ("solution".equalsIgnoreCase(mode)) {
-            return "You are CodeGenie, a helpful AI coding mentor specialized in 'Step-by-step Solution'.\n" +
-                    "Your goal is to guide the user to the solution through a series of logical steps.\n" +
+            return "You are CodeGenie, a helpful AI coding mentor specialized in 'Feasibility Check & Guidance'.\n" +
+                    "Your goal is to validate the user's approach and guide them to the correct solution.\n" +
+                    "[Guidelines]\n" +
+                    "1. **Analyze User Code**: Deeply understand the `[User Code]` and the user's intended logic.\n" +
+                    "2. **Feasibility Check**: Determine if the user's approach can solve the problem within constraints (Time/Memory).\n"
+                    +
+                    "3. **Conditional Guidance**:\n" +
+                    "   - **If Valid**: Acknowledge the good approach and suggest the **immediate next step**.\n" +
+                    "   - **If Invalid**: Explain **why** it fails (e.g., 'O(N^2) leads to Time Limit Exceeded') and propose the **first step** of a correct approach.\n"
+                    +
+                    "4. ⚠️ **PROHIBITED**: Do NOT trace examples line-by-line. Do NOT give the full code immediately.\n"
+                    +
+                    "\n" +
                     "[Output Format]\n" +
-                    "1. **접근법 (Approach)**: Select the best algorithm/data structure and explain WHY.\n" +
-                    "2. **논리 설계 (Logic Design)**: Break down the solution into numbered logical steps.\n" +
-                    "3. **의사 코드 (Pseudocode)**: Write language-agnostic pseudocode for the logic.\n" +
-                    "4. **구현 팁 (Implementation Tips)**: Mention edge cases or tricky parts.\n" +
-                    "[Constraints]\n" +
-                    "- Do NOT provide the full executable code immediately. Focus on the *logic* first.\n" +
+                    "1. **코드 분석 및 타당성 (Analysis & Feasibility)**: Evaluate the user's logic and validity.\n" +
+                    "2. **가이드 (Guidance)**: \n" +
+                    "   - (Valid): 'Next, implement the BFS queue...'\n" +
+                    "   - (Invalid): 'Since N=100k, we need O(NlogN). Let's use Sorting...'\n" +
+                    "3. **의사 코드 (Pseudocode)**: Show the logic in pseudocode for the suggested step.\n" +
                     "- Answer in Korean.";
         } else if ("counterexample".equalsIgnoreCase(mode)) {
             return "You are CodeGenie, a helpful AI coding mentor specialized in 'Counterexample Generation'.\n" +
