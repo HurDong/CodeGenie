@@ -10,6 +10,7 @@ import Demo from './components/Demo';
 import Footer from './components/Footer';
 import AiMentoringPage from './pages/AiMentoringPage';
 import HistoryPage from './pages/HistoryPage';
+import DashboardPage from './pages/DashboardPage';
 import OAuthCallback from './components/OAuthCallback';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -115,6 +116,7 @@ function App() {
           />
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/ai-mentoring" element={<AiMentoringPage />} />
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/oauth/callback" element={<OAuthCallback />} />

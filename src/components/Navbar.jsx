@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
+    // Navbar component with dashboard link
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [lang, setLang] = useState('KR');
     const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -131,6 +132,7 @@ const Navbar = () => {
                     <li><Link to="/ai-mentoring" onClick={() => setIsMenuOpen(false)}>AI 멘토링</Link></li>
                     {isLoggedIn ? (
                         <>
+                            <li><Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>대시보드</Link></li>
                             <li><Link to="/history" onClick={() => setIsMenuOpen(false)}>대화 기록</Link></li>
                             <li><a href="#" onClick={handleLogout}>로그아웃</a></li>
                         </>
