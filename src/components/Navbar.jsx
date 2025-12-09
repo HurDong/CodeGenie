@@ -36,6 +36,7 @@ const Navbar = () => {
 
     const validateEmail = (email) => {
         if (!email) return '이메일을 입력해주세요.';
+        if (email === 'admin') return '';
         if (!email.includes('@')) return "이메일 주소에 '@'를 포함해 주세요.";
         return '';
     };

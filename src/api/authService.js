@@ -42,6 +42,14 @@ export const register = async (email, password, name) => {
 };
 
 export const login = async (email, password) => {
+    // Dev Bypass
+    if (email === 'admin' && password === 'admin') {
+        const user = { email: 'admin@codegenie.com', name: 'Admin Developer' };
+        setSession('mock_dev_token_' + Date.now(), user);
+        toast.success('관리자 모드로 접속합니다.');
+        return user;
+    }
+
     try {
         const response = await fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
