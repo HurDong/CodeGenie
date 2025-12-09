@@ -5,22 +5,44 @@ import { useAuth } from '../context/AuthContext';
 import AuroraBackground from '../components/ui/AuroraBackground';
 import '../index.css';
 
-const UserInfoSection = ({ user }) => {
-    // Mock Data (In real app, calculate from history)
-    const currentStreak = 12; 
-    const maxStreak = 45;
-    const totalActiveDays = 142;
+import lampLevel1 from '../assets/badges/lamp_level_1.png';
+import lampLevel2 from '../assets/badges/lamp_level_2.png';
+import lampLevel3 from '../assets/badges/lamp_level_3.png';
+import lampLevel4 from '../assets/badges/lamp_level_4.png';
+import lampLevel5 from '../assets/badges/lamp_level_5.png';
 
-    const getStreakRank = (streak) => {
-        if (streak >= 30) return { title: "Diamond Inferno", color: "#60a5fa", icon: "💎", min: 30, next: 100 };
-        if (streak >= 14) return { title: "Gold Blaze", color: "#fbbf24", icon: "🥇", min: 14, next: 30 };
-        if (streak >= 7) return { title: "Silver Flame", color: "#94a3b8", icon: "🥈", min: 7, next: 14 };
-        if (streak >= 3) return { title: "Bronze Spark", color: "#b45309", icon: "🥉", min: 3, next: 7 };
-        return { title: "Sprout", color: "#4ade80", icon: "🌱", min: 0, next: 3 };
+const UserInfoSection = ({ user }) => {
+    // TODO: Connect this to real user statistics (streak)
+    const streakDays = 12; // Example streak (Mock Data)
+    
+    // Level Calculation Logic based on Streak
+    // Level 1: 0~2 days
+    // Level 2: 3~6 days
+    // Level 3: 7~13 days
+    // Level 4: 14~29 days
+    // Level 5: 30+ days
+    const calculateLevel = (streak) => {
+        if (streak >= 30) return 5;
+        if (streak >= 14) return 4;
+        if (streak >= 7) return 3;
+        if (streak >= 3) return 2;
+        return 1;
     };
 
-    const rank = getStreakRank(currentStreak);
-    const progress = Math.min(100, ((currentStreak - rank.min) / (rank.next - rank.min)) * 100);
+    const getLevelTitle = (level) => {
+        switch(level) {
+            case 5: return "God of Genie";
+            case 4: return "Grandmaster";
+            case 3: return "Sorcerer";
+            case 2: return "Apprentice";
+            default: return "Novice";
+        }
+    };
+
+    const userLevel = calculateLevel(streakDays);
+    const badgeImages = [lampLevel1, lampLevel2, lampLevel3, lampLevel4, lampLevel5];
+    const currentBadge = badgeImages[userLevel - 1] || lampLevel1;
+    const levelTitle = getLevelTitle(userLevel);
 
     return (
         <div style={{
@@ -28,72 +50,177 @@ const UserInfoSection = ({ user }) => {
             backdropFilter: 'blur(12px)',
             borderRadius: '1.5rem',
             border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '2rem',
+            padding: '1.2rem 3rem', // Reduced vertical padding, increased horizontal
             boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.2)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             height: '100%'
         }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                <div style={{ 
-                    width: '100px', height: '100px', 
-                    borderRadius: '50%', 
-                    background: `linear-gradient(135deg, ${rank.color}, #a855f7)`, // Dynamic border color
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '3.5rem', 
-                    boxShadow: `0 0 20px ${rank.color}80`,
-                    border: '4px solid rgba(255,255,255,0.1)'
+            <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
+                {/* 뱃지 이미지가 아바타 대체 */}
+                <div style={{
+                    width: '150px', 
+                    height: '150px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    filter: 'drop-shadow(0 0 25px rgba(99, 102, 241, 0.6))',
+                    borderRadius: '50%',
+                    overflow: 'hidden', // Circle crop
+                    border: '4px solid rgba(255, 255, 255, 0.1)' // Optional ring for better definition
                 }}>
-                    {rank.icon}
+                    <img 
+                        src={currentBadge} 
+                        alt={`Level ${userLevel} Badge`} 
+                        style={{ 
+                            width: '100%', 
+                            height: '100%', 
+                            objectFit: 'cover' // Fill the circle
+                        }} 
+                    />
                 </div>
+                
                 <div>
-                    <h2 style={{ fontSize: '2rem', fontWeight: '800', color: '#f8fafc', marginBottom: '0.25rem' }}>
+                    <h2 style={{ fontSize: '2.5rem', fontWeight: '800', color: '#f8fafc', marginBottom: '0.8rem', letterSpacing: '-0.5px' }}>
                         {user?.name || 'Developer'}
                     </h2>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ 
-                                fontSize: '1.1rem', 
-                                fontWeight: '700', 
-                                color: rank.color,
-                                textShadow: `0 0 10px ${rank.color}40`
-                            }}>
-                                {rank.title}
-                            </span>
-                            <span style={{ fontSize: '0.9rem', color: '#64748b' }}> | {currentStreak}일 연속 학습 중 🔥</span>
-                        </div>
-                        
-                        {/* Progress Bar to Next Rank */}
-                        <div style={{ width: '200px', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', position: 'relative', overflow: 'hidden' }}>
-                            <div style={{ 
-                                width: `${progress}%`, 
-                                height: '100%', 
-                                background: rank.color, 
-                                borderRadius: '3px',
-                                transition: 'width 1s ease-out'
-                            }} />
-                        </div>
-                        <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
-                            다음 랭크까지 <b>{rank.next - currentStreak}일</b> 남음
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <span style={{ 
+                            padding: '6px 16px', 
+                            background: 'rgba(56, 189, 248, 0.1)', 
+                            color: '#38bdf8', 
+                            borderRadius: '20px', 
+                            fontSize: '1rem', 
+                            border: '1px solid rgba(56, 189, 248, 0.2)',
+                            fontWeight: '600',
+                            letterSpacing: '0.5px'
+                        }}>
+                            Lv. {userLevel} {levelTitle}
                         </span>
+                        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)' }}></div>
+                        <span style={{ color: '#94a3b8', fontSize: '1rem' }}>다음 레벨까지 {30 - streakDays}일 남음</span>
                     </div>
                 </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '3rem', marginRight: '2rem' }}>
+            <div style={{ display: 'flex', gap: '4rem', marginRight: '3rem' }}>
                 <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.5rem' }}>현재 스트릭</div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: '700', color: '#fbbf24' }}>{currentStreak}일</div>
+                    <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>총 해결 문제</div>
+                    <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#fff' }}>142</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.5rem' }}>최장 스트릭</div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: '700', color: '#f472b6' }}>{maxStreak}일</div>
+                    <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>현재 랭킹</div>
+                    <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#fbbf24' }}>Gold I</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.9rem', color: '#94a3b8', marginBottom: '0.5rem' }}>총 활동일</div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: '700', color: '#fff' }}>{totalActiveDays}</div>
+                    <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>연속 학습</div>
+                    <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#f472b6' }}>{streakDays}일</div>
                 </div>
+            </div>
+        </div>
+    );
+};
+
+const CustomDropdown = ({ options, selectedValue, onChange }) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const dropdownRef = React.useRef(null);
+
+    // Close on click outside
+    React.useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const selectedLabel = options.find(opt => opt.value === selectedValue)?.label || selectedValue;
+
+    return (
+        <div ref={dropdownRef} style={{ position: 'relative', minWidth: '100px', fontFamily: '"Inter", sans-serif' }}>
+            <div 
+                onClick={() => setIsOpen(!isOpen)}
+                style={{
+                    background: 'rgba(30, 41, 59, 0.4)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    padding: '8px 16px',
+                    color: '#e2e8f0',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px',
+                    transition: 'all 0.2s ease',
+                    boxShadow: isOpen ? '0 0 0 2px rgba(99, 102, 241, 0.5)' : 'none',
+                    backdropFilter: 'blur(8px)'
+                }}
+            >
+                <span>{selectedLabel}</span>
+                <span style={{ 
+                    transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', 
+                    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    opacity: 0.7 
+                }}>
+                    ▼
+                </span>
+            </div>
+
+            {/* Dropdown Menu */}
+            <div style={{
+                position: 'absolute',
+                top: 'calc(100% + 8px)',
+                right: 0,
+                width: '100%',
+                minWidth: '120px',
+                background: 'rgba(15, 23, 42, 0.95)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                padding: '4px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                backdropFilter: 'blur(12px)',
+                opacity: isOpen ? 1 : 0,
+                transform: isOpen ? 'translateY(0) scale(1)' : 'translateY(-10px) scale(0.95)',
+                pointerEvents: isOpen ? 'auto' : 'none',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                zIndex: 50,
+                overflow: 'hidden'
+            }}>
+                {options.map((option) => (
+                    <div
+                        key={option.value}
+                        onClick={() => {
+                            onChange(option.value);
+                            setIsOpen(false);
+                        }}
+                        style={{
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            color: selectedValue === option.value ? '#a5b4fc' : '#cbd5e1',
+                            fontSize: '0.9rem',
+                            cursor: 'pointer',
+                            background: selectedValue === option.value ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                            transition: 'all 0.15s ease',
+                            fontWeight: selectedValue === option.value ? '600' : '400',
+                        }}
+                        onMouseEnter={(e) => {
+                            if (selectedValue !== option.value) e.target.style.background = 'rgba(255, 255, 255, 0.05)';
+                        }}
+                        onMouseLeave={(e) => {
+                            if (selectedValue !== option.value) e.target.style.background = 'transparent';
+                        }}
+                    >
+                        {option.label}
+                    </div>
+                ))}
             </div>
         </div>
     );
@@ -185,11 +312,17 @@ const StreakCalendar = () => {
     const getLevelColor = (count) => {
         if (count === -1) return 'transparent'; // Padding days
         if (count === 0) return 'rgba(255, 255, 255, 0.05)'; // Empty
-        if (count <= 1) return '#4c1d95'; // Level 1 (Deep Violet)
-        if (count <= 2) return '#7c3aed'; // Level 2 (Violet)
-        if (count <= 3) return '#a855f7'; // Level 3 (Purple)
-        return '#f0abfc'; // Level 4 (Neon Fuchsia - Max)
+        if (count <= 1) return '#312e81'; // Level 1 (Deep Indigo)
+        if (count <= 2) return '#4f46e5'; // Level 2 (Indigo)
+        if (count <= 3) return '#8b5cf6'; // Level 3 (Violet)
+        return '#d8b4fe'; // Level 4 (Bright Purple - Max)
     };
+
+    const yearOptions = [
+        { value: currentYear, label: `${currentYear}년` },
+        { value: currentYear - 1, label: `${currentYear - 1}년` },
+        { value: currentYear - 2, label: `${currentYear - 2}년` },
+    ];
 
     return (
         <div ref={containerRef} style={{
@@ -211,25 +344,12 @@ const StreakCalendar = () => {
                     <span style={{ fontSize: '1.4rem' }}>🌱</span> 스트릭 (Streak)
                 </h3>
                 
-                {/* Year Selector */}
-                <select 
-                    value={selectedYear} 
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    style={{
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '8px',
-                        color: '#e2e8f0',
-                        padding: '4px 8px',
-                        fontSize: '0.9rem',
-                        cursor: 'pointer',
-                        outline: 'none'
-                    }}
-                >
-                    <option value={currentYear}>{currentYear}년</option>
-                    <option value={currentYear - 1}>{currentYear - 1}년</option>
-                    <option value={currentYear - 2}>{currentYear - 2}년</option>
-                </select>
+                {/* Custom Dropdown for Year Selection */}
+                <CustomDropdown 
+                    options={yearOptions}
+                    selectedValue={selectedYear}
+                    onChange={(val) => setSelectedYear(val)}
+                />
             </div>
             
             {/* Calendar Grid Container */}
@@ -340,10 +460,10 @@ const StreakCalendar = () => {
             <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: '#64748b', marginTop: 'auto' }}>
                 <span>Less</span>
                 <div style={{ width: '10px', height: '10px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '2px' }}></div>
-                <div style={{ width: '10px', height: '10px', background: '#4c1d95', borderRadius: '2px' }}></div>
-                <div style={{ width: '10px', height: '10px', background: '#7c3aed', borderRadius: '2px' }}></div>
-                <div style={{ width: '10px', height: '10px', background: '#a855f7', borderRadius: '2px' }}></div>
-                <div style={{ width: '10px', height: '10px', background: '#f0abfc', borderRadius: '2px' }}></div>
+                <div style={{ width: '10px', height: '10px', background: '#312e81', borderRadius: '2px' }}></div>
+                <div style={{ width: '10px', height: '10px', background: '#4f46e5', borderRadius: '2px' }}></div>
+                <div style={{ width: '10px', height: '10px', background: '#8b5cf6', borderRadius: '2px' }}></div>
+                <div style={{ width: '10px', height: '10px', background: '#d8b4fe', borderRadius: '2px' }}></div>
                 <span>More</span>
             </div>
         </div>
@@ -368,13 +488,13 @@ const DashboardPage = () => {
                 }} />
 
                 <div className="dashboard-layout" style={{ 
-                    maxWidth: '1400px', 
+                    maxWidth: '1600px', // Wider layout
                     margin: '0 auto', 
                     padding: '1.5rem 2rem', 
-                    paddingTop: '80px',
+                    paddingTop: '60px', // Moved Up
                     height: '100%',
                     display: 'grid',
-                    gridTemplateRows: 'minmax(0, 0.8fr) minmax(0, 1.6fr)', // 2x2 proportion adjustment (User info smaller height)
+                    gridTemplateRows: '260px minmax(0, 1fr)', // Fixed height for top block, rest for bottom
                     gridTemplateColumns: '1fr 1fr',
                     gap: '1.5rem',
                     position: 'relative',
