@@ -349,7 +349,7 @@ const AlgorithmSkillTree = () => {
     }, [activeIndex]);
 
     return (
-        <div style={{ position: 'relative', width: '100%', height: '600px', borderRadius: '16px', overflow: 'hidden', boxShadow: 'inset 0 0 50px rgba(0,0,0,0.5)', background: '#0f172a' }}>
+        <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '16px', overflow: 'hidden', boxShadow: 'inset 0 0 50px rgba(0,0,0,0.5)', background: '#0f172a' }}>
             
             {/* UI Navigation Controls */}
             <div style={{
