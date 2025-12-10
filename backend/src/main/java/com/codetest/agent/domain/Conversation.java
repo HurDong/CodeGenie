@@ -23,6 +23,8 @@ public class Conversation {
     private String problemUrl;
     private String strategy; // AI's persisted strategy roadmap
     private com.codetest.agent.dto.ProblemSpec problemSpec;
+    private String category; // e.g. graph, dp, greedy
+    private List<String> topics; // e.g. ["BFS", "Shortest Path"]
     private String status; // ongoing, resolved
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

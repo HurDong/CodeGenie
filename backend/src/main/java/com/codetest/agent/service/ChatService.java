@@ -241,7 +241,8 @@ public class ChatService {
     }
 
     public Conversation updateConversation(String id, String problemText, String userCode, String codeLanguage,
-            com.codetest.agent.dto.ProblemSpec problemSpec, String platform, String problemUrl, String title) {
+            com.codetest.agent.dto.ProblemSpec problemSpec, String platform, String problemUrl, String title,
+            String category, List<String> topics, String status) {
         Conversation conversation = getConversation(id);
         if (problemText != null)
             conversation.setProblemText(problemText);
@@ -257,6 +258,12 @@ public class ChatService {
             conversation.setProblemUrl(problemUrl);
         if (title != null)
             conversation.setTitle(title);
+        if (category != null)
+            conversation.setCategory(category);
+        if (topics != null)
+            conversation.setTopics(topics);
+        if (status != null)
+            conversation.setStatus(status);
         conversation.setUpdatedAt(LocalDateTime.now());
         return conversationRepository.save(conversation);
     }

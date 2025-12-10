@@ -57,7 +57,7 @@ public class ChatController {
             @RequestBody UpdateConversationRequest request) {
         Conversation conversation = chatService.updateConversation(id, request.getProblemText(), request.getUserCode(),
                 request.getCodeLanguage(), request.getProblemSpec(), request.getPlatform(), request.getProblemUrl(),
-                request.getTitle());
+                request.getTitle(), request.getCategory(), request.getTopics(), request.getStatus());
         return ApiResponse.success(conversation, "대화 정보가 업데이트되었습니다.");
     }
 
@@ -90,5 +90,8 @@ public class ChatController {
         private String platform;
         private String problemUrl;
         private String title;
+        private String category;
+        private List<String> topics;
+        private String status;
     }
 }
