@@ -17,7 +17,65 @@ const handleAuthError = () => {
   window.location.href = '/';
 };
 
+const mockApiResponse = async (url, options) => {
+  console.log(`[Mock API] ${options.method || 'GET'} ${url}`);
+  
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  let data = null;
+  const isJsonCheck = true; // Most endpoints follow { status: 'success', data: ... }
+
+  if (url.includes('/history') && !url.includes('/history/')) {
+      data = [
+         { id: 'mock_chat_1', title: 'Admin Mode Test', mode: 'understanding_summary', updatedAt: new Date().toISOString(), messages: [] }
+      ];
+  } else if (url.includes('/chat/start')) {
+      const body = JSON.parse(options.body);
+      data = {
+          id: 'mock_chat_' + Date.now(),
+          title: body.title || 'New Chat',
+          mode: body.mode,
+          messages: [],
+          updatedAt: new Date().toISOString()
+      };
+  } else if (url.includes('/chat/message')) {
+      const body = JSON.parse(options.body);
+      data = {
+          id: 'msg_' + Date.now(),
+          role: 'assistant',
+          content: `[Admin Mode] I received: "${body.content}". Backend is bypassed.`,
+          timestamp: new Date().toISOString()
+      };
+  } else if (url.includes('/execute')) {
+      // Execute endpoint does NOT wrap in { status: success, data: ... } based on client.js usage
+      const result = {
+          output: "Execution simulated in Admin Mode.\nNo real code was run.",
+          exitCode: 0,
+          executionTimeMs: 10
+      };
+      return {
+          ok: true,
+          status: 200,
+          json: async () => result
+      };
+  }
+
+  return {
+    ok: true,
+    status: 200,
+    json: async () => ({ status: 'success', data: data })
+  };
+};
+
 const fetchWithAuth = async (url, options = {}) => {
+  const token = localStorage.getItem('accessToken');
+  
+  // Intercept Mock Token requests
+  if (token && token.startsWith('mock_dev_token_')) {
+      return mockApiResponse(url, { ...options, body: options.body });
+  }
+
   const response = await fetch(url, {
     ...options,
     headers: {

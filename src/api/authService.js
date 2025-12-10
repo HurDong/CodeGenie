@@ -15,6 +15,7 @@ const getHeaders = () => {
     };
 };
 
+
 export const register = async (email, password, name) => {
     try {
         const response = await fetch(`${API_BASE_URL}/register`, {
@@ -24,9 +25,14 @@ export const register = async (email, password, name) => {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            const errorMessage = error.message || 'Registration failed';
-            toast.error(errorMessage);
+            const errorText = await response.text();
+            let errorMessage;
+            try {
+                const error = JSON.parse(errorText);
+                errorMessage = error.message || 'Registration failed';
+            } catch (e) {
+                errorMessage = errorText || `Registration failed (${response.status})`;
+            }
             throw new Error(errorMessage);
         }
 
@@ -35,7 +41,6 @@ export const register = async (email, password, name) => {
         setSession(data.accessToken, user);
         return user;
     } catch (error) {
-        toast.error(`오류가 발생했습니다: ${error.message}`);
         console.error(`Request Failed: ${API_BASE_URL}/register`, error);
         throw error;
     }
@@ -58,9 +63,14 @@ export const login = async (email, password) => {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            const errorMessage = error.message || 'Login failed';
-            toast.error(errorMessage);
+            const errorText = await response.text();
+            let errorMessage;
+            try {
+                const error = JSON.parse(errorText);
+                errorMessage = error.message || 'Login failed';
+            } catch (e) {
+                errorMessage = errorText || `Login failed (${response.status})`;
+            }
             throw new Error(errorMessage);
         }
 
@@ -69,15 +79,9 @@ export const login = async (email, password) => {
         setSession(data.accessToken, user);
         return user;
     } catch (error) {
-        toast.error(`로그인 오류: ${error.message}`);
         console.error(`Request Failed: ${API_BASE_URL}/login`, error);
         throw error;
     }
-
-    const data = await response.json();
-    const user = { email: data.email, name: data.name };
-    setSession(data.accessToken, user);
-    return user;
 };
 
 export const updateProfile = async (name, email) => {
