@@ -1259,6 +1259,23 @@ footer {
   margin-bottom: 0.5rem;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  line-height: 1.6;
+}
+
+.message-bubble ol,
+.message-bubble ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.8rem;
+  padding-left: 1.4rem;
+}
+
+.message-bubble li {
+  margin-bottom: 0.25rem;
+  line-height: 1.6;
+}
+
+.message-bubble li:last-child {
+  margin-bottom: 0;
 }
 
 .message-bubble p:last-child {

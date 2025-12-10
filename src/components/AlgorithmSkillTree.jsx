@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Stars, Text, Float, Cloud, Sparkles, Html, Tube, Environment, CameraControls } from '@react-three/drei';
+import { Stars, Text, Float, Cloud, Sparkles, Html, Tube, Environment, CameraControls, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 
@@ -245,37 +245,83 @@ const MagicLamp = () => {
     );
 };
 
-const SmokePlume = ({ curve }) => {
-    // Generate clouds along the path
-    const cloudPositions = useMemo(() => curve.getPoints(12), [curve]);
+// Helper to create a soft, fluffy smoke texture procedurally
+const createSmokeTexture = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
     
-    return (
-        <group>
-            {/* 1. The Core Stream */}
-            <Tube args={[curve, 64, 0.8, 16, false]}> {/* Thicker stream */}
-                <meshStandardMaterial 
-                    color="#8b5cf6" 
-                    transparent 
-                    opacity={0.15} // Reduced opacity
-                    roughness={1}
-                    emissive="#6d28d9"
-                    emissiveIntensity={0.2}
-                />
-            </Tube>
+    // Radial gradient for soft cloud look
+    const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)'); // Core
+    gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.3)'); // Soft edge
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)'); // Transparent outer
 
-            {/* 2. Billowing Smoke Clouds - Larger and more dispersed */}
-            {cloudPositions.map((pos, i) => (
-                <group key={i} position={pos}>
-                    <Cloud 
-                        args={[1, 1]} 
-                        opacity={0.1} // Reduced opacity
-                        speed={0.1} // Slow movement
-                        width={4} 
-                        depth={2} 
-                        segments={8} 
-                        color={i % 2 === 0 ? "#c084fc" : "#e879f9"} 
-                    />
-                </group>
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 128, 128);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    return texture;
+};
+
+const SmokeParticles = ({ curve }) => {
+    const texture = useMemo(() => createSmokeTexture(), []);
+    // Generate particles along the curve
+    const particles = useMemo(() => {
+        // Increase count for density
+        const count = 80; 
+        const temp = [];
+        for (let i = 0; i < count; i++) {
+            const t = i / count;
+            const point = curve.getPoint(t);
+            temp.push({
+                position: point,
+                scale: 2 + Math.random() * 2, // Varied size (2 to 4)
+                rotation: Math.random() * Math.PI,
+                speed: 0.2 + Math.random() * 0.3, // Varied rotation speed
+                offset: Math.random() * 100, // Random starting phase
+            });
+        }
+        return temp;
+    }, [curve]);
+
+    const group = useRef();
+
+    useFrame((state) => {
+        if (!group.current) return;
+        const t = state.clock.elapsedTime;
+        
+        group.current.children.forEach((child, i) => {
+            const p = particles[i];
+            // Rotate specifically for swirl effect
+            child.rotation.z = p.rotation + t * p.speed;
+            
+            // Pulse scale for "breathing" effect
+            const scalePulse = Math.sin(t * 1.5 + p.offset) * 0.3;
+            child.scale.setScalar(p.scale + scalePulse);
+            
+            // Optional: slight position drift could go here
+        });
+    });
+
+    return (
+        <group ref={group}>
+            {particles.map((p, i) => (
+                <Billboard key={i} position={p.position} follow={true} lockX={false} lockY={false} lockZ={false}>
+                    <mesh>
+                        <planeGeometry args={[1, 1]} />
+                        <meshBasicMaterial 
+                            map={texture} 
+                            transparent 
+                            opacity={0.15} 
+                            depthWrite={false} 
+                            // Tinting purple/pink for the genie vibe
+                            color={i % 2 === 0 ? "#c084fc" : "#e879f9"} 
+                            blending={THREE.AdditiveBlending}
+                        />
+                    </mesh>
+                </Billboard>
             ))}
         </group>
     );
@@ -413,7 +459,7 @@ const AlgorithmSkillTree = () => {
                 {/* 3. Main Scene */}
                 <group position={[0, 0, 0]}>
                     <MagicLamp />
-                    <SmokePlume curve={curve} />
+                    <SmokeParticles curve={curve} />
                     
                     {journeyData.map((item, i) => (
                         <NebulaNode 
