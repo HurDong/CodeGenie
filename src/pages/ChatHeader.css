@@ -1,0 +1,207 @@
+/* Glassmorphism Header - Stylish & Opaque */
+.chat-header-glass {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  min-height: 84px;
+  /* Deep Cosmic Gradient (Reversed) */
+  background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+  /* Neon Glow Border */
+  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 15px -3px rgba(59, 130, 246, 0.15);
+  margin: 0;
+  width: 100%;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Category Badge Wrapper */
+.category-badge-wrapper {
+  position: relative;
+  z-index: 105; /* Ensure dropdown is above other elements */
+}
+
+/* Badge Style */
+.category-badge-glass {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.category-badge-glass:hover {
+  filter: brightness(1.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.cat-arrow {
+  font-size: 0.65rem;
+  opacity: 0.7;
+  margin-left: 4px;
+  transition: transform 0.2s;
+}
+
+.cat-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* Custom Dropdown Menu */
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 2000; /* Ensure it is above the overlay */
+  min-width: 180px;
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: transparent;
+  color: #cbd5e1;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-align: left;
+  transition: all 0.15s;
+  font-family: 'Pretendard', sans-serif;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.dropdown-item.active {
+  background: rgba(99, 102, 241, 0.1); /* Indigo tint */
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Title Display */
+.chat-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-title-wrapper:hover .edit-hint-icon { opacity: 1; }
+
+.chat-title-display {
+  background: transparent;
+  border: none;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  width: 350px;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  outline: none;
+  font-family: 'Pretendard', sans-serif;
+  letter-spacing: -0.5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.chat-title-display:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.edit-hint-icon {
+  font-size: 0.9rem;
+  color: #64748b;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+/* Status Seal Button */
+.status-seal-btn {
+  position: relative;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-seal-btn .seal-content {
+  padding: 6px 14px;
+  border-radius: 20px; /* More pill-shaped */
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Pulsing effect for In Progress */
+.status-seal-btn:not(.resolved) .seal-content {
+  animation: pulse-orange 2s infinite;
+}
+
+@keyframes pulse-orange {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+.status-seal-btn.resolved .seal-content {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+}
+
+.status-seal-btn:hover .seal-content {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+.status-seal-btn:active .seal-content {
+  transform: scale(0.98);
+}
