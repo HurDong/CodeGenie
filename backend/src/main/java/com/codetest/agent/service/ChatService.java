@@ -163,7 +163,11 @@ public class ChatService {
                     "   - **If Valid**: Acknowledge the good approach and suggest the **immediate next step**.\n" +
                     "   - **If Invalid**: Explain **why** it fails (e.g., 'O(N^2) leads to Time Limit Exceeded') and propose the **first step** of a correct approach.\n"
                     +
-                    "4. ⚠️ **PROHIBITED**: Do NOT trace examples line-by-line. Do NOT give the full code immediately.\n"
+                    "4. **Code Generation Rule**: \n" +
+                    "   - If the user requests code or implementation for a specific step (N), you **MAY** provide the code.\n"
+                    +
+                    "   - **Constraint**: Provide the code **cumulative from Step 1 up to Step N**. \n" +
+                    "   - ⚠️ **PROHIBITED**: Do NOT provide the full solution (steps N+1, N+2...) in advance.\n"
                     +
                     "\n" +
                     "[Output Format]\n" +
