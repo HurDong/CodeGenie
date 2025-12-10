@@ -38,6 +38,7 @@
     "react-simple-code-editor": "^0.14.1",
     "react-syntax-highlighter": "^16.1.0",
     "remark-gfm": "^4.0.1",
+    "styled-components": "^6.1.19",
     "three": "^0.181.2"
   },
   "devDependencies": {
