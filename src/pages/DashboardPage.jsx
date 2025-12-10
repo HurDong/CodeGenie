@@ -491,10 +491,10 @@ const DashboardPage = () => {
                     maxWidth: '1600px', // Wider layout
                     margin: '0 auto', 
                     padding: '1.5rem 2rem', 
-                    paddingTop: '60px', // Moved Up
+                    paddingTop: '40px', // Matched with HistoryPage
                     height: '100%',
                     display: 'grid',
-                    gridTemplateRows: '260px minmax(0, 1fr)', // Fixed height for top block, rest for bottom
+                    gridTemplateRows: 'auto 260px minmax(0, 1fr)', // Added auto row for header
                     gridTemplateColumns: '1fr 1fr',
                     gap: '1.5rem',
                     position: 'relative',
@@ -502,6 +502,12 @@ const DashboardPage = () => {
                     boxSizing: 'border-box'
                 }}>
                     
+                    {/* 0. Header (New) */}
+                    <div style={{ gridColumn: '1 / -1', marginBottom: '1rem' }}>
+                        <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#e2e8f0', marginBottom: '0.5rem' }}>대시보드</h1>
+                        <p style={{ fontSize: '1rem', color: '#94a3b8' }}>나의 학습 현황과 성장을 한눈에 확인하세요</p>
+                    </div>
+
                     {/* 1. User Info (Top Row - Spans 2) */}
                     <div style={{ gridColumn: '1 / -1', minHeight: '0' }}>
                         <UserInfoSection user={user} />
