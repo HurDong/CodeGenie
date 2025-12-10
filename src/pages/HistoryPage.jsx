@@ -2,9 +2,64 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
+
+const MOCK_HISTORY_DATA = [
+  {
+    id: 'mock_1',
+    title: 'Dijkstra Algorithm Optimization',
+    topics: ['Graph', 'Shortest Path'],
+    category: 'graph',
+    status: 'resolved',
+    date: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
+  },
+  {
+    id: 'mock_2',
+    title: 'Knapsack Problem - DP Approach',
+    topics: ['DP', 'Optimization'],
+    category: 'dp',
+    status: 'ongoing',
+    date: new Date(Date.now() - 1000 * 60 * 60 * 25), // Yesterday
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 25).toISOString(),
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 25).toISOString()
+  },
+  {
+    id: 'mock_3',
+    title: 'Merge Sort Visualizer',
+    topics: ['Sorting', 'Recursion'],
+    category: 'sort',
+    status: 'resolved',
+    date: new Date(Date.now() - 1000 * 60 * 60 * 48), // 2 days ago
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString()
+  },
+  {
+    id: 'mock_4',
+    title: 'N-Queens Backtracking',
+    topics: ['Backtracking', 'Constraint Satisfaction'],
+    category: 'backtracking',
+    status: 'new',
+    date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString()
+  },
+  {
+    id: 'mock_5',
+    title: 'Binary Search Implementation',
+    topics: ['Search', 'Divide and Conquer'],
+    category: 'search',
+    status: 'resolved',
+    date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), // 5 days ago
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString()
+  }
+];
 
 const HistoryPage = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
 
@@ -12,9 +67,29 @@ const HistoryPage = () => {
   const [conversations, setConversations] = useState([]);
 
   useEffect(() => {
+    if (loading) return;
+    let isMounted = true;
+
     const fetchHistory = async () => {
+      // Admin Mock Data Override
+      // Check for various admin identifiers
+      const isAdmin = user?.name === 'admin' || user?.email === 'admin' || 
+                      user?.email === 'admin@codegenie.com' || user?.name === 'Admin Developer';
+
+      console.log('Running fetchHistory. isAdmin:', isAdmin, 'User:', user);
+
+      if (isAdmin) {
+          console.log("Admin user detected, using mock history data");
+          if (isMounted) {
+            setConversations(MOCK_HISTORY_DATA);
+          }
+          return;
+      }
+
       try {
         const data = await api.getHistory();
+        if (!isMounted) return;
+
         if (Array.isArray(data)) {
           const mappedData = data.map(item => ({
             ...item,
@@ -29,12 +104,19 @@ const HistoryPage = () => {
           setConversations([]);
         }
       } catch (error) {
-        console.error("Failed to fetch history:", error);
-        setConversations([]);
+        if (isMounted) {
+          console.error("Failed to fetch history:", error);
+          setConversations([]);
+        }
       }
     };
+
     fetchHistory();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user, loading]);
 
   const categories = {
     all: { label: '전체', icon: '📚', color: '#6366f1' },
@@ -163,6 +245,7 @@ const HistoryPage = () => {
         <div className="history-header">
           <h1>대화 기록</h1>
           <p>AI 멘토와 나눈 모든 대화를 확인하고 관리하세요</p>
+          {/* DEBUG INFO - REMOVE LATER */}
         </div>
 
         {/* Stats Overview */}
