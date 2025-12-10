@@ -15,6 +15,7 @@ import 'prismjs/components/prism-c';
 import 'prismjs/components/prism-cpp';
 import 'prismjs/themes/prism-okaidia.css'; // Dark theme
 import "./CodeEditor.css"; // Code editor styles
+import "./ChatHeader.css"; // Chat Header styles
 import UserProfile from "../components/UserProfile";
 import SpotlightCard from "../components/ui/SpotlightCard";
 import { motion, AnimatePresence } from "framer-motion";
@@ -55,6 +56,17 @@ const MODES = {
     placeholder: "코드를 입력하고 반례를 요청하세요...",
     color: "#ef4444",
   },
+};
+const CATEGORIES = {
+  implementation: { label: '구현', icon: '⚙️', color: '#14b8a6' },
+  graph: { label: '그래프/탐색', icon: '🕸️', color: '#8b5cf6' },
+  greedy: { label: '그리디', icon: '💰', color: '#10b981' },
+  dp: { label: '동적 프로그래밍', icon: '🔢', color: '#ec4899' },
+  backtracking: { label: '백트래킹', icon: '🔙', color: '#a855f7' },
+  search: { label: '이분 탐색', icon: '🔍', color: '#06b6d4' },
+  sort: { label: '정렬', icon: '📊', color: '#f59e0b' },
+  'two-pointer': { label: '투 포인터', icon: '👉', color: '#ef4444' },
+  etc: { label: '기타', icon: '📌', color: '#64748b' },
 };
 
 const AiMentoringPage = () => {
@@ -107,6 +119,9 @@ const AiMentoringPage = () => {
 
   // Mobile Sidebar State
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
+  // Header Dropdown State
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   const messagesEndRef = useRef(null);
 
@@ -608,6 +623,36 @@ int main() {
     }
   };
 
+  const handleUpdateCategory = async (newCategory) => {
+    if (!activeChatId) return;
+    setShowCategoryDropdown(false); // Close dropdown
+    try {
+      await api.updateConversation(activeChatId, { category: newCategory });
+      setChatSessions(prev => prev.map(chat => 
+        chat.id === activeChatId ? { ...chat, category: newCategory } : chat
+      ));
+      toast.success("카테고리가 변경되었습니다.");
+    } catch (error) {
+      console.error("Failed to update category:", error);
+      toast.error("카테고리 변경 실패");
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    if (!activeChatId) return;
+    const newStatus = activeChat?.status === 'resolved' ? 'ongoing' : 'resolved';
+    try {
+      await api.updateConversation(activeChatId, { status: newStatus });
+      setChatSessions(prev => prev.map(chat => 
+        chat.id === activeChatId ? { ...chat, status: newStatus } : chat
+      ));
+      toast.success(newStatus === 'resolved' ? "대화가 완료되었습니다." : "대화가 진행중으로 변경되었습니다.");
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      toast.error("상태 변경 실패");
+    }
+  };
+
   return (
     <div className="ai-mentoring-page">
       <Navbar />
@@ -687,6 +732,75 @@ int main() {
           >
             {isSidebarOpen ? '✕' : '☰'}
           </button>
+
+            {/* Premium Header */}
+            {activeChatId && (
+              <div className="chat-header-glass">
+                <div className="header-left">
+                  <div className="category-badge-wrapper">
+                     <div 
+                        className="category-badge-glass"
+                        style={{ 
+                          color: CATEGORIES[activeChat?.category || 'etc']?.color,
+                          borderColor: `${CATEGORIES[activeChat?.category || 'etc']?.color}40`,
+                          backgroundColor: `${CATEGORIES[activeChat?.category || 'etc']?.color}15`
+                        }}
+                        onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                     >
+                        <span className="cat-icon">{CATEGORIES[activeChat?.category || 'etc']?.icon}</span>
+                        <span className="cat-label">{CATEGORIES[activeChat?.category || 'etc']?.label}</span>
+                        <span className={`cat-arrow ${showCategoryDropdown ? 'open' : ''}`}>▼</span>
+                     </div>
+                     
+                     {/* Custom Dropdown */}
+                     {showCategoryDropdown && (
+                       <div className="custom-dropdown-menu">
+                          {Object.entries(CATEGORIES).map(([key, { label, icon, color }]) => (
+                            <button
+                              key={key}
+                              className={`dropdown-item ${activeChat?.category === key ? 'active' : ''}`}
+                              onClick={() => handleUpdateCategory(key)}
+                              style={{ color: activeChat?.category === key ? '#fff' : color }}
+                            >
+                              <span style={{ width: '20px' }}>{icon}</span>
+                              {label}
+                            </button>
+                          ))}
+                       </div>
+                     )}
+                     {/* Overlay to close on click outside */}
+                     {showCategoryDropdown && (
+                        <div 
+                          style={{ position: 'fixed', top:0, left:0, width:'100vw', height:'100vh', zIndex: 104 }}
+                          onClick={() => setShowCategoryDropdown(false)}
+                        />
+                     )}
+                  </div>
+                  <div className="chat-title-wrapper">
+                    <input 
+                      type="text" 
+                      value={activeChat?.title || ''} 
+                      readOnly 
+                      className="chat-title-display"
+                      onClick={() => handleEditTitle(activeChat)}
+                    />
+                    <span className="edit-hint-icon">✎</span>
+                  </div>
+                </div>
+                
+                <div className="header-right">
+                   <button 
+                      className={`status-seal-btn ${activeChat?.status === 'resolved' ? 'resolved' : ''}`}
+                      onClick={handleToggleStatus}
+                   >
+                      <div className="seal-ring"></div>
+                      <div className="seal-content">
+                        {activeChat?.status === 'resolved' ? '✅ 완료' : '🔥 진행중'}
+                      </div>
+                   </button>
+                </div>
+              </div>
+            )}
 
           <div className="messages-container" onClick={() => setIsSidebarOpen(false)}>
             {messages.map((msg) => (
@@ -806,6 +920,9 @@ int main() {
                   );
                 })}
               </div>
+
+              {/* Status and Category Controls REMOVED form here - Moved to Header */}
+              {/* Context Status Indicators */}
 
               {/* Context Status Indicators */}
               <div className="ide-controls">
