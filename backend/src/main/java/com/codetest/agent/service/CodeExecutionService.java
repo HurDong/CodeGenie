@@ -31,6 +31,8 @@ public class CodeExecutionService {
      * 3. Runs each Test Case
      * 4. Returns consolidated results
      */
+    // --- Main Logic ---
+
     public ExecutionResponse execute(ExecutionRequest request) {
         String runId = UUID.randomUUID().toString();
         Path tempDir = null;
@@ -38,49 +40,79 @@ public class CodeExecutionService {
         response.setTestResults(new ArrayList<>());
 
         try {
-            // 1. Prepare Workspace
             tempDir = Files.createTempDirectory("codegenie_" + runId);
 
-            // 2. Prepare Code (Java specific)
-            String finalCode = prepareJavaCode(request.getCode(), "Solution");
+            // 1. Prepare Code
+            // If user code has 'class Solution', we rename it if needed, or leave it.
+            // But we assume the file should be named Solution.java usually.
+            // If user code defines 'public class Main', we handle that too.
+            // Let's rely on prepareJavaCode logic properly.
+
+            // Logic:
+            // If code has "public static void main", treating as standard Main execution.
+            // If NOT, we treat as Solution execution requiring ReflectionRunner.
+
+            boolean hasMain = hasMainMethod(request.getCode());
+            String finalCode;
+            String mainClassName;
+
+            if (hasMain) {
+                // Determine class name ? Or force Solution/Main?
+                // Logic in prepareJavaCode replaces "public class X" with "public class
+                // Solution"
+                // Let's stick to Solution.java as the user file.
+                finalCode = prepareJavaCode(request.getCode(), "Solution");
+                mainClassName = "Solution";
+            } else {
+                // It is a Solution class without main.
+                // We ensure it is "public class Solution"
+                finalCode = prepareJavaCode(request.getCode(), "Solution");
+                mainClassName = "ReflectionRunner";
+            }
+
             Path sourcePath = tempDir.resolve("Solution.java");
             Files.writeString(sourcePath, finalCode);
 
-            // 3. Compile
-            CompilationResult compileResult = compileJava(sourcePath);
-            if (!compileResult.success) {
+            if (!hasMain) {
+                // Write ReflectionRunner
+                Path runnerPath = tempDir.resolve("ReflectionRunner.java");
+                Files.writeString(runnerPath, REFLECTION_RUNNER_SOURCE);
+            }
+
+            // 2. Compile
+            // If hasMain is false, we need to compile ReflectionRunner.java too?
+            // Passing useReflectionRunner flag
+            CompilationResult compileResult = compileJava(sourcePath, !hasMain, tempDir);
+
+            if (!compileResult.success()) {
                 response.setAllPassed(false);
-                response.setError("Compilation Failed:\n" + compileResult.output);
-                response.setExitCode(1); // Compilation error
+                response.setError("Compilation Failed:\n" + compileResult.output());
+                response.setExitCode(1);
                 return response;
             }
 
-            // 4. Run Test Cases
+            // 3. Run Test Cases
             boolean allPassed = true;
             if (request.getTestCases() != null && !request.getTestCases().isEmpty()) {
                 for (TestCase testCase : request.getTestCases()) {
-                    TestResult result = runSingleTestCase(tempDir, "Solution", testCase);
+                    // If hasMain -> Run Solution
+                    // If !hasMain -> Run ReflectionRunner
+                    TestResult result = runSingleTestCase(tempDir, mainClassName, testCase);
                     response.getTestResults().add(result);
                     if (!result.isPassed()) {
                         allPassed = false;
                     }
                 }
             } else {
-                // If no test cases provided, just run once with empty input (or raw run)
-                // This is useful for "Run" button without specific tests
-                // We create a dummy result or just capture output.
-                // For structure consistency, let's treat it as 1 case with empty input.
-                TestResult result = runSingleTestCase(tempDir, "Solution", new TestCase("", ""));
-                // Since there is no expected output, we mark passed=true or just leave as is.
-                // But usually "Run" means "Check stdout".
-                // Let's set passed = true for this ad-hoc case.
+                // Run once
+                TestResult result = runSingleTestCase(tempDir, mainClassName, new TestCase("", ""));
                 result.setPassed(true);
                 response.getTestResults().add(result);
-                response.setOutput(result.getActualOutput()); // Set main output
+                response.setOutput(result.getActualOutput());
             }
 
             response.setAllPassed(allPassed);
-            response.setExitCode(0); // Success flow
+            response.setExitCode(0);
 
         } catch (Exception e) {
             log.error("Execution failed", e);
@@ -95,10 +127,6 @@ public class CodeExecutionService {
         return response;
     }
 
-    /**
-     * Legacy/Helper Adapter for single execution.
-     * Used by ChatService or simple calls.
-     */
     public ExecutionResult runCode(String userCode, String input, String language) {
         ExecutionRequest request = new ExecutionRequest(language, userCode, List.of(new TestCase(input, "")));
         ExecutionResponse response = execute(request);
@@ -121,15 +149,34 @@ public class CodeExecutionService {
 
     // --- Helper Methods ---
 
-    private CompilationResult compileJava(Path sourcePath) throws IOException, InterruptedException {
-        ProcessBuilder compileBuilder = new ProcessBuilder("javac", "-encoding", "UTF-8", sourcePath.toString());
+    // --- Helper Methods ---
+
+    // --- Helper Methods ---
+
+    private boolean hasMainMethod(String code) {
+        return code.contains("public static void main");
+    }
+
+    private CompilationResult compileJava(Path sourcePath, boolean useReflectionRunner, Path tempDir)
+            throws IOException, InterruptedException {
+        List<String> command = new ArrayList<>();
+        command.add("javac");
+        command.add("-encoding");
+        command.add("UTF-8");
+        command.add(sourcePath.toString());
+
+        if (useReflectionRunner) {
+            command.add(tempDir.resolve("ReflectionRunner.java").toString());
+        }
+
+        ProcessBuilder compileBuilder = new ProcessBuilder(command);
         compileBuilder.redirectErrorStream(true);
         Process compileProcess = compileBuilder.start();
 
-        // Close stdin to prevent hanging if process expects input
+        // Close stdin
         compileProcess.getOutputStream().close();
 
-        // Capture output in a separate thread to prevent deadlock
+        // Capture output
         StringBuilder output = new StringBuilder();
         Thread outputThread = new Thread(() -> {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(compileProcess.getInputStream()))) {
@@ -143,7 +190,7 @@ public class CodeExecutionService {
         });
         outputThread.start();
 
-        boolean finished = compileProcess.waitFor(15000, TimeUnit.MILLISECONDS); // Increased to 15s
+        boolean finished = compileProcess.waitFor(15000, TimeUnit.MILLISECONDS);
 
         if (!finished) {
             compileProcess.destroyForcibly();
@@ -151,7 +198,7 @@ public class CodeExecutionService {
             return new CompilationResult(false, "Compilation Time Limit Exceeded (15s)");
         }
 
-        outputThread.join(1000); // Wait for reader to finish
+        outputThread.join(1000);
 
         if (compileProcess.exitValue() != 0) {
             return new CompilationResult(false, output.toString());
@@ -165,7 +212,8 @@ public class CodeExecutionService {
         result.setExpectedOutput(testCase.getExpectedOutput());
 
         try {
-            ProcessBuilder runBuilder = new ProcessBuilder("java", "-cp", tempDir.toString(), className);
+            ProcessBuilder runBuilder = new ProcessBuilder("java", "-cp", tempDir.toString(), className,
+                    "-Dfile.encoding=UTF-8");
             runBuilder.directory(tempDir.toFile());
 
             Process runProcess = runBuilder.start();
@@ -175,12 +223,11 @@ public class CodeExecutionService {
                 try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(runProcess.getOutputStream()))) {
                     writer.write(testCase.getInput());
                     writer.flush();
-                } // Stream closed automatically
+                }
             } else {
                 runProcess.getOutputStream().close();
             }
 
-            // Capture output streams slightly differently to avoid deadlock
             CommonProcessOutput outputHandler = new CommonProcessOutput(runProcess);
             outputHandler.start();
 
@@ -205,7 +252,10 @@ public class CodeExecutionService {
                     if (testCase.getExpectedOutput() == null || testCase.getExpectedOutput().isEmpty()) {
                         result.setPassed(true);
                     } else {
-                        result.setPassed(testCase.getExpectedOutput().trim().equals(stdout.trim()));
+                        // Normalize line endings and trim
+                        String expected = testCase.getExpectedOutput().trim().replace("\r\n", "\n");
+                        String actual = stdout.trim().replace("\r\n", "\n");
+                        result.setPassed(expected.equals(actual));
                     }
                 }
             }
@@ -215,6 +265,13 @@ public class CodeExecutionService {
             result.setError("Execution Error: " + e.getMessage());
         }
         return result;
+    }
+
+    private String prepareJavaCode(String code, String className) {
+        if (code.contains("class " + className)) {
+            return code;
+        }
+        return code.replaceAll("public\\s+class\\s+\\w+", "public class " + className);
     }
 
     // Helper class to capture stdout and stderr in background threads
@@ -263,12 +320,115 @@ public class CodeExecutionService {
         }
     }
 
-    private String prepareJavaCode(String code, String className) {
-        if (code.contains("class " + className)) {
-            return code;
-        }
-        return code.replaceAll("public\\s+class\\s+\\w+", "public class " + className);
-    }
+    // --- Reflection Runner Wrapper Code ---
+    // This wrapper handles parsing input arguments from stdin based on the method
+    // signature
+    // and printing the result to stdout.
+    private static final String REFLECTION_RUNNER_SOURCE = """
+            import java.lang.reflect.Method;
+            import java.util.*;
+            import java.io.*;
+            import java.util.regex.*;
+
+            public class ReflectionRunner {
+                public static void main(String[] args) {
+                    try {
+                        Class<?> clazz = Class.forName("Solution");
+                        Method method = null;
+                        for (Method m : clazz.getDeclaredMethods()) {
+                            if (m.getName().equals("solution")) { // Convention: 'solution'
+                                method = m;
+                                break;
+                            }
+                        }
+                        if (method == null) {
+                            // Fallback: use the first public method that returns something
+                            for (Method m : clazz.getMethods()) {
+                                if (m.getDeclaringClass() != Object.class && !m.getName().equals("main")) {
+                                    method = m;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (method == null) {
+                            System.err.println("No solution method found in Solution class.");
+                            System.exit(1);
+                        }
+
+                        Object instance = clazz.getDeclaredConstructor().newInstance();
+                        Class<?>[] paramTypes = method.getParameterTypes();
+                        Object[] params = new Object[paramTypes.length];
+
+                        Scanner scanner = new Scanner(System.in);
+                        // Use a custom delimiter pattern? Maybe just tokenize by whitespace unless string contains spaces.
+                        // Ideally, we parse tokens based on type.
+
+                        // Simple Parser:
+                        // If type is int/long/double -> scanner.next[Type]()
+                        // If type is String -> scanner.next()
+                        // If type is array -> parse [a, b, c] string
+
+                        for (int i = 0; i < paramTypes.length; i++) {
+                            params[i] = parseArg(scanner, paramTypes[i]);
+                        }
+
+                        Object result = method.invoke(instance, params);
+                        printResult(result);
+
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                        System.exit(1);
+                    }
+                }
+
+                private static Object parseArg(Scanner scanner, Class<?> type) {
+                    if (type == int.class) return scanner.nextInt();
+                    if (type == long.class) return scanner.nextLong();
+                    if (type == double.class) return scanner.nextDouble();
+                    if (type == String.class) return scanner.next();
+                    if (type == int[].class) {
+                        // Parse array string e.g. [1, 2, 3] or [1,2,3]
+                        // Consume token. Since array might have spaces, this is tricky with simple Scanner.
+                        // Assuming input format is properly spaced or we read whole remaining line?
+                        // Let's assume input text provided by user matches tokens.
+                        // But array inputs like `[1, 2, 3]` are often passed as single token logic if we use regex.
+
+                         String token = scanner.findInLine(Pattern.compile("\\\\[.*\\\\]"));
+                         if (token == null) token = scanner.next(); // Fallback
+
+                         token = token.replaceAll("[\\\\[\\\\]]", "");
+                         if (token.trim().isEmpty()) return new int[0];
+                         String[] parts = token.split("[,\\\\s]+");
+                         int[] arr = new int[parts.length];
+                         for(int i=0; i<parts.length; i++) arr[i] = Integer.parseInt(parts[i].trim());
+                         return arr;
+                    }
+                    if (type == String[].class) {
+                         String token = scanner.findInLine(Pattern.compile("\\\\[.*\\\\]"));
+                         if (token == null) token = scanner.next();
+                         token = token.replaceAll("[\\\\[\\\\]]", "");
+                         if (token.trim().isEmpty()) return new String[0];
+                         return token.split("[,\\\\s]+");
+                    }
+                    return null;
+                }
+
+                private static void printResult(Object result) {
+                    if (result == null) {
+                        System.out.println("null");
+                    } else if (result.getClass().isArray()) {
+                        if (result instanceof int[]) System.out.println(Arrays.toString((int[]) result));
+                        else if (result instanceof long[]) System.out.println(Arrays.toString((long[]) result));
+                        else if (result instanceof double[]) System.out.println(Arrays.toString((double[]) result));
+                        else if (result instanceof Object[]) System.out.println(Arrays.deepToString((Object[]) result));
+                        else System.out.println(result); // Fallback
+                    } else {
+                        System.out.println(result);
+                    }
+                }
+            }
+            """;
 
     private void deleteDirectory(File directory) {
         File[] allContents = directory.listFiles();
@@ -280,10 +440,11 @@ public class CodeExecutionService {
         directory.delete();
     }
 
-    // Inner Classes / Records
+    // Inner Classes
     public record ExecutionResult(boolean success, String output, String error) {
     }
 
     private record CompilationResult(boolean success, String output) {
     }
+
 }
