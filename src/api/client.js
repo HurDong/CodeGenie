@@ -175,5 +175,23 @@ export const api = {
       console.error('Error executing code:', error);
       throw error;
     }
+  },
+
+  // Problem Loading
+  getProblemData: async (url, platform) => {
+    const response = await fetchWithAuth(`${API_BASE_URL}/parse?url=${encodeURIComponent(url)}&platform=${platform}`);
+    if (!response.ok) throw new Error('Failed to parse problem');
+    return await response.json();
+  },
+
+  generateCodeTemplate: async (problemSpec, language) => {
+      const response = await fetchWithAuth(`${API_BASE_URL}/chat/template`, {
+          method: 'POST',
+          body: JSON.stringify({ problemSpec, language })
+      });
+      if (!response.ok) throw new Error('Failed to generate template');
+      const result = await response.json();
+      if (result.status === 'error') throw new Error(result.message);
+      return result.data;
   }
 };

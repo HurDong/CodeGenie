@@ -13,6 +13,8 @@ import 'prismjs/components/prism-java';
 import 'prismjs/components/prism-python';
 import 'prismjs/components/prism-c';
 import 'prismjs/components/prism-cpp';
+import bojLogo from '../assets/boj_logo.png';
+import pgmLogo from '../assets/pgm_logo.png';
 import 'prismjs/themes/prism-okaidia.css'; // Dark theme
 import "./CodeEditor.css"; // Code editor styles
 import "./ChatHeader.css"; // Chat Header styles
@@ -291,6 +293,12 @@ const AiMentoringPage = () => {
         System.out.println("Hello, CodeGenie!");
     }
 }`,
+    java_programmers: `class Solution {
+    public int solution(int n) {
+        int answer = 0;
+        return answer;
+    }
+}`,
     python: `print("Hello, CodeGenie!")`,
     cpp: `#include <iostream>
 
@@ -298,35 +306,186 @@ int main() {
     std::cout << "Hello, CodeGenie!" << std::endl;
     return 0;
 }`,
+    cpp_programmers: `#include <string>
+#include <vector>
+
+using namespace std;
+
+int solution(int num1, int num2) {
+    int answer = 0;
+    return answer;
+}`,
     c: `#include <stdio.h>
 
 int main() {
     printf("Hello, CodeGenie!\\n");
     return 0;
+}`,
+    c_programmers: `#include <stdio.h>
+#include <stdbool.h>
+#include <stdlib.h>
+
+int solution(int num1, int num2) {
+    int answer = 0;
+    return answer;
 }`
   };
 
   const handleOpenCodeModal = () => {
     const savedCode = activeChat?.userCode;
     const savedLanguage = activeChat?.codeLanguage || "java";
+    const savedPlatform = activeChat?.platform || "baekjoon";
 
     setTempCodeLanguage(savedLanguage);
-    // Use saved code if exists, otherwise use default template for the language
-    setTempCodeText(savedCode || DEFAULT_CODE[savedLanguage]);
+    
+    // Determine default code based on platform if no user code
+    let defaultTemplate = DEFAULT_CODE[savedLanguage];
+    if (savedPlatform === 'programmers') {
+      if (savedLanguage === 'java') defaultTemplate = DEFAULT_CODE['java_programmers'];
+      else if (savedLanguage === 'cpp' || savedLanguage === 'c++') defaultTemplate = DEFAULT_CODE['cpp_programmers'];
+      else if (savedLanguage === 'c') defaultTemplate = DEFAULT_CODE['c_programmers'];
+    }
+
+    // Use saved code if exists, otherwise use default template
+    setTempCodeText(savedCode || defaultTemplate);
 
     // Initialize test cases from problem spec if available
     if (activeChat?.problemSpec?.examples && activeChat.problemSpec.examples.length > 0) {
       setTestCases(activeChat.problemSpec.examples.map(ex => ({
         input: ex.input,
         expectedOutput: ex.output,
-        isUserDefined: ex.isUserDefined // Load flag
+        isUserDefined: ex.isUserDefined
       })));
     } else {
-      setTestCases([{ input: "", expectedOutput: "", isUserDefined: true }]); // Default new is UserDefined
+      setTestCases([{ input: "", expectedOutput: "", isUserDefined: true }]);
     }
 
     setShowCodeModal(true);
   };
+  
+    // In handleFetchProblem, we need to pass language
+    // But handleFetch doesn't have language scope easily accessible if it's outside modal? 
+    // Wait, tempCodeLanguage is state in this component.
+    
+  const handleFetchProblem = async () => {
+    if (!tempProblemUrl) return;
+    setIsFetching(true);
+    try {
+      const response = await fetch(`/api/parse?url=${encodeURIComponent(tempProblemUrl)}&platform=${tempPlatform}`);
+      // ... (response checking) ...
+      const contentType = response.headers.get("content-type");
+      const isJson = contentType && contentType.includes("application/json");
+
+      if (isJson) {
+        const data = await response.json();
+        // ... (error checks) ...
+        setTempProblemData(data);
+        
+        // Generate Code Template for Programmers
+        if (tempPlatform === "programmers") {
+          try {
+             const template = await api.generateCodeTemplate(data, tempCodeLanguage || 'java');
+             if (template && (template.includes("class Solution") || template.includes("solution"))) {
+                setTempCodeText(template);
+             } else {
+                 let fallback = DEFAULT_CODE[tempCodeLanguage];
+                 if (tempCodeLanguage === 'java') fallback = DEFAULT_CODE['java_programmers'];
+                 else if (tempCodeLanguage === 'cpp' || tempCodeLanguage === 'c++') fallback = DEFAULT_CODE['cpp_programmers'];
+                 else if (tempCodeLanguage === 'c') fallback = DEFAULT_CODE['c_programmers'];
+                 setTempCodeText(fallback || DEFAULT_CODE[tempCodeLanguage]);
+             }
+          } catch (err) {
+              console.error("Failed to generate template:", err);
+              let fallback = DEFAULT_CODE[tempCodeLanguage];
+              if (tempCodeLanguage === 'java') fallback = DEFAULT_CODE['java_programmers'];
+              else if (tempCodeLanguage === 'cpp' || tempCodeLanguage === 'c++') fallback = DEFAULT_CODE['cpp_programmers'];
+              else if (tempCodeLanguage === 'c') fallback = DEFAULT_CODE['c_programmers'];
+              setTempCodeText(fallback || DEFAULT_CODE[tempCodeLanguage]);
+          }
+        }
+        
+        setProblemStep("review");
+      } else {
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`Server error: ${response.status} - ${text.substring(0, 100)}`);
+        }
+        throw new Error("Received non-JSON response from server");
+      }
+
+    } catch (error) {
+      console.error("Error fetching problem:", error);
+
+      const isServerError = error.message.includes("Failed to fetch") || error.message.includes("Server error");
+
+      if (isServerError) {
+        toast((t) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '250px' }}>
+            <div style={{ fontWeight: '600' }}>서버 연결 실패 (백엔드 실행 필요)</div>
+            <div style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>데모 데이터를 대신 불러오시겠습니까?</div>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                style={{
+                  padding: '6px 12px',
+                  background: 'transparent',
+                  color: '#94a3b8',
+                  border: '1px solid #475569',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem'
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={() => {
+                  setTempProblemData({
+                    title: "A+B",
+                    description: "두 정수 A와 B를 입력받은 다음, A+B를 출력하는 프로그램을 작성하시오.",
+                    inputFormat: "첫째 줄에 A와 B가 주어진다. (0 < A, B < 10)",
+                    outputFormat: "첫째 줄에 A+B를 출력한다.",
+                    constraints: "",
+                    timeLimit: "1초",
+                    memoryLimit: "128MB",
+                    examples: [{ input: "1 2", output: "3" }]
+                  });
+                  setProblemStep("review");
+                  toast.dismiss(t.id);
+                }}
+                style={{
+                  padding: '6px 12px',
+                  background: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  fontWeight: '500'
+                }}
+              >
+                불러오기
+              </button>
+            </div>
+          </div>
+        ), {
+          duration: 8000,
+          style: {
+            background: '#1e293b',
+            color: '#fff',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '16px',
+          },
+        });
+        return;
+      }
+
+      toast.error(`문제 정보를 가져오는데 실패했습니다: ${error.message}`);
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
 
   const handleSaveProblem = async () => {
     try {
@@ -422,106 +581,7 @@ int main() {
   // Old handler removed
 
 
-  const handleFetchProblem = async () => {
-    if (!tempProblemUrl) return;
-    setIsFetching(true);
-    try {
-      const response = await fetch(`/api/parse?url=${encodeURIComponent(tempProblemUrl)}&platform=${tempPlatform}`);
 
-      const contentType = response.headers.get("content-type");
-      const isJson = contentType && contentType.includes("application/json");
-
-      if (isJson) {
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || `Server error: ${response.status}`);
-        }
-        if (data.error) {
-          throw new Error(data.error);
-        }
-        setTempProblemData(data);
-        setProblemStep("review");
-      } else {
-        if (!response.ok) {
-          const text = await response.text();
-          throw new Error(`Server error: ${response.status} - ${text.substring(0, 100)}`);
-        }
-        throw new Error("Received non-JSON response from server");
-      }
-
-    } catch (error) {
-      console.error("Error fetching problem:", error);
-
-      // Fallback to demo data if server is unreachable
-      const isServerError = error.message.includes("Failed to fetch") || error.message.includes("Server error");
-
-      if (isServerError) {
-        toast((t) => (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '250px' }}>
-            <div style={{ fontWeight: '600' }}>서버 연결 실패 (백엔드 실행 필요)</div>
-            <div style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>데모 데이터를 대신 불러오시겠습니까?</div>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
-              <button
-                onClick={() => toast.dismiss(t.id)}
-                style={{
-                  padding: '6px 12px',
-                  background: 'transparent',
-                  color: '#94a3b8',
-                  border: '1px solid #475569',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '0.85rem'
-                }}
-              >
-                취소
-              </button>
-              <button
-                onClick={() => {
-                  setTempProblemData({
-                    title: "A+B",
-                    description: "두 정수 A와 B를 입력받은 다음, A+B를 출력하는 프로그램을 작성하시오.",
-                    inputFormat: "첫째 줄에 A와 B가 주어진다. (0 < A, B < 10)",
-                    outputFormat: "첫째 줄에 A+B를 출력한다.",
-                    constraints: "",
-                    timeLimit: "1초",
-                    memoryLimit: "128MB",
-                    examples: [{ input: "1 2", output: "3" }]
-                  });
-                  setProblemStep("review");
-                  toast.dismiss(t.id);
-                }}
-                style={{
-                  padding: '6px 12px',
-                  background: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '0.85rem',
-                  fontWeight: '500'
-                }}
-              >
-                불러오기
-              </button>
-            </div>
-          </div>
-        ), {
-          duration: 8000,
-          style: {
-            background: '#1e293b',
-            color: '#fff',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '16px',
-          },
-        });
-        return;
-      }
-
-      toast.error(`문제 정보를 가져오는데 실패했습니다: ${error.message}`);
-    } finally {
-      setIsFetching(false);
-    }
-  };
 
     const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -1071,14 +1131,14 @@ int main() {
                         className={`platform-card ${tempPlatform === "baekjoon" ? "selected" : ""}`}
                         onClick={() => setTempPlatform("baekjoon")}
                       >
-                        <img src="/assets/boj_logo.png" alt="Baekjoon" className="platform-logo" />
+                        <img src={bojLogo} alt="Baekjoon" className="platform-logo" />
                         <span className="platform-name">백준 (BOJ)</span>
                       </div>
                       <div
                         className={`platform-card ${tempPlatform === "programmers" ? "selected" : ""}`}
                         onClick={() => setTempPlatform("programmers")}
                       >
-                        <img src="/assets/pgm_logo.png" alt="Programmers" className="platform-logo" />
+                        <img src={pgmLogo} alt="Programmers" className="platform-logo" />
                         <span className="platform-name">프로그래머스</span>
                       </div>
                     </div>
@@ -1356,11 +1416,20 @@ int main() {
                     currentLanguage={tempCodeLanguage}
                     onLanguageChange={(newLang) => {
                       setTempCodeLanguage(newLang);
+                      
+                      // Determine correct template
+                      let template = DEFAULT_CODE[newLang];
+                      if (activeChat?.platform === 'programmers') {
+                        if (newLang === 'java') template = DEFAULT_CODE['java_programmers'];
+                        else if (newLang === 'cpp' || newLang === 'c++') template = DEFAULT_CODE['cpp_programmers'];
+                        else if (newLang === 'c') template = DEFAULT_CODE['c_programmers'];
+                      }
+
                       // If current code is empty or matches one of the default templates, switch to new template
                       const isDefaultOrEmpty = !tempCodeText.trim() || Object.values(DEFAULT_CODE).some(code => code.trim() === tempCodeText.trim());
 
                       if (isDefaultOrEmpty) {
-                        setTempCodeText(DEFAULT_CODE[newLang]);
+                        setTempCodeText(template);
                       }
                     }}
                   />
