@@ -63,7 +63,11 @@ public class ChatService {
         List<Map<String, Object>> messages = new ArrayList<>();
 
         // 1. System Prompt
-        String systemPrompt = getSystemPrompt(conversation.getMode());
+        String source = null;
+        if (conversation.getProblemSpec() != null) {
+            source = conversation.getProblemSpec().getSource();
+        }
+        String systemPrompt = getSystemPrompt(conversation.getMode(), source);
         if ("solution".equalsIgnoreCase(conversation.getMode()) && conversation.getStrategy() != null) {
             systemPrompt += "\n\n[CURRENT STRATEGY ANCHOR]\n" +
                     "Your agreed-upon strategy is: \"" + conversation.getStrategy() + "\"\n" +
@@ -335,7 +339,7 @@ public class ChatService {
         }
     }
 
-    private String getSystemPrompt(String mode) {
+    private String getSystemPrompt(String mode, String source) {
         if ("understanding_summary".equalsIgnoreCase(mode) || "understanding".equalsIgnoreCase(mode)) {
             return "You are a 'Problem Summary Expert'.\n" +
                     "The user is overwhelmed by the problem description.\n" +
@@ -397,25 +401,47 @@ public class ChatService {
                     "3. **의사 코드 (Pseudocode)**: Show the logic in pseudocode for the suggested step.\n" +
                     "- Answer in Korean.";
         } else if ("counterexample".equalsIgnoreCase(mode)) {
-            return "You are a 'Test Case Generator'.\n" +
-                    "The user wants to verify their code against counterexamples.\n" +
-                    "Your goal is to generate 5 robust test cases in JSON format.\n" +
-                    "[Process]\n" +
-                    "1. **Analyze Input Format**: Check if the problem requires a 'Test Case Count' (T) at the start.\n"
-                    +
-                    "   - If YES (e.g., 'First line is T'), your 'input' string MUST start with '1\\n' (representing 1 test case) followed by the actual input.\n"
-                    +
-                    "   - Failing to do this will cause `NoSuchElementException` in user code.\n" +
-                    "2. **Draft 5 Inputs**: 1 Basic, 2 Edge, 2 Random.\n" +
-                    "3. **Compute Correct Output**: For the constructed input.\n" +
-                    "4. Output STRICT JSON only. No markdown.\n" +
-                    "\n" +
-                    "[JSON Format]\n" +
-                    "[\n" +
-                    "  {\"input\": \"1\\n5\", \"expected\": \"44\"}, \n" +
-                    "  {\"input\": \"1\\n1\", \"expected\": \"1\"}\n" +
-                    "]\n" +
-                    "(Note: If problem does NOT ask for T, just send \"5\" or \"1\".)";
+            if ("PROGRAMMERS".equalsIgnoreCase(source)) {
+                return "You are a 'Test Case Generator' for Programmers problems.\n" +
+                        "The user wants to verify their code against counterexamples. Code runs as a Solution class method.\n"
+                        +
+                        "Your goal is to generate 5 robust test cases in JSON format.\n" +
+                        "[Process]\n" +
+                        "1. **Analyze Function Signature**: Identify the parameters from the problem description.\n" +
+                        "2. **Draft 5 Inputs**: 1 Basic, 2 Edge, 2 Random. \n" +
+                        "   - Format: Inputs must be comma-separated values matching the function arguments.\n" +
+                        "   - Example for solution(int n, int k): \"10, 3\"\n" +
+                        "   - Example for solution(int[] arr): \"[1, 2, 3]\"\n" +
+                        "3. **Compute Correct Output**: For the constructed input.\n" +
+                        "4. Output STRICT JSON only. No markdown.\n" +
+                        "\n" +
+                        "[JSON Format]\n" +
+                        "[\n" +
+                        "  {\"input\": \"10, 3\", \"expected\": \"20480\"}, \n" +
+                        "  {\"input\": \"5, 0\", \"expected\": \"0\"}\n" +
+                        "]\n" +
+                        "(Note: Do NOT include Test Case Count (T). Just the parameter values.)";
+            } else {
+                return "You are a 'Test Case Generator'.\n" +
+                        "The user wants to verify their code against counterexamples.\n" +
+                        "Your goal is to generate 5 robust test cases in JSON format.\n" +
+                        "[Process]\n" +
+                        "1. **Analyze Input Format**: Check if the problem requires a 'Test Case Count' (T) at the start.\n"
+                        +
+                        "   - If YES (e.g., 'First line is T'), your 'input' string MUST start with '1\\n' (representing 1 test case) followed by the actual input.\n"
+                        +
+                        "   - Failing to do this will cause `NoSuchElementException` in user code.\n" +
+                        "2. **Draft 5 Inputs**: 1 Basic, 2 Edge, 2 Random.\n" +
+                        "3. **Compute Correct Output**: For the constructed input.\n" +
+                        "4. Output STRICT JSON only. No markdown.\n" +
+                        "\n" +
+                        "[JSON Format]\n" +
+                        "[\n" +
+                        "  {\"input\": \"1\\n5\", \"expected\": \"44\"}, \n" +
+                        "  {\"input\": \"1\\n1\", \"expected\": \"1\"}\n" +
+                        "]\n" +
+                        "(Note: If problem does NOT ask for T, just send \"5\" or \"1\".)";
+            }
         } else if ("debugging".equalsIgnoreCase(mode)) {
             return "You are CodeGenie, a helpful AI coding mentor specialized in 'Strategic Debugging'.\n" +
                     "The user wants to know WHERE and HOW to debug their code.\n" +
