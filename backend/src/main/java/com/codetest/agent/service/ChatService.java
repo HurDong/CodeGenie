@@ -126,6 +126,94 @@ public class ChatService {
         return aiMessage;
     }
 
+    public String generateCodeTemplate(com.codetest.agent.dto.ProblemSpec spec, String language) {
+        String langInstruction = "";
+        String exampleOutput = "";
+
+        if ("c".equalsIgnoreCase(language)) {
+            langInstruction = """
+                    Generate a C 'solution' function.
+                    Include necessary headers like <stdio.h>, <stdbool.h>, <stdlib.h>.
+                    Infer return type and parameters.
+                    """;
+            exampleOutput = """
+                    #include <stdio.h>
+                    #include <stdbool.h>
+                    #include <stdlib.h>
+
+                    int solution(int num1, int num2) {
+                        int answer = 0;
+                        return answer;
+                    }
+                    """;
+        } else if ("cpp".equalsIgnoreCase(language) || "c++".equalsIgnoreCase(language)) {
+            langInstruction = """
+                    Generate a C++ 'solution' function.
+                    Include <string>, <vector> and 'using namespace std;'.
+                    Infer return type and parameters.
+                    """;
+            exampleOutput = """
+                    #include <string>
+                    #include <vector>
+
+                    using namespace std;
+
+                    int solution(int num1, int num2) {
+                        int answer = 0;
+                        return answer;
+                    }
+                    """;
+        } else {
+            // Default to Java
+            langInstruction = """
+                    Generate a Java class named 'Solution'.
+                    Inside, define a public method named 'solution'.
+                    Infer the correct return type and parameter types based on description.
+                    """;
+            exampleOutput = """
+                    class Solution {
+                        public int solution(int n) {
+                            int answer = 0;
+                            return answer;
+                        }
+                    }
+                    """;
+        }
+
+        String prompt = String.format("""
+                You are a coding expert.
+                The user needs a solution code template for a coding problem in %s.
+
+                Problem Title: %s
+                Description: %s
+                Input Format: %s
+                Output Format: %s
+
+                Task:
+                %s
+
+                Output ONLY the valid code. Do NOT include any markdown code blocks (```), explanations, or comments.
+                Just the raw code.
+
+                Example Output:
+                %s
+                """,
+                language,
+                spec.getTitle(),
+                spec.getDescription(),
+                spec.getInputFormat(),
+                spec.getOutputFormat(),
+                langInstruction,
+                exampleOutput);
+
+        List<Map<String, Object>> messages = new ArrayList<>();
+        messages.add(Map.of("role", "system", "content",
+                "You are a code generator. Output only raw code without markdown formatting."));
+        messages.add(Map.of("role", "user", "content", prompt));
+
+        return llmService.getChatResponse(messages).trim();
+    }
+
     private String handleCounterexampleLoop(Conversation conversation, List<Map<String, Object>> messages) {
         // 1. Get JSON Test Cases from LLM
         String rawJson = llmService.getChatResponse(messages);

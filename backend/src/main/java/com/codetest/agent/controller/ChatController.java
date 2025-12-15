@@ -68,6 +68,16 @@ public class ChatController {
         return ApiResponse.success(null, "대화가 삭제되었습니다.");
     }
 
+    @PostMapping("/chat/template")
+    public ApiResponse<String> generateTemplate(@RequestBody GenerateTemplateRequest request) {
+        try {
+            String template = chatService.generateCodeTemplate(request.getProblemSpec(), request.getLanguage());
+            return ApiResponse.success(template);
+        } catch (Exception e) {
+            return ApiResponse.error(e.getMessage());
+        }
+    }
+
     @Data
     static class StartChatRequest {
         private String mode;
@@ -95,5 +105,11 @@ public class ChatController {
         private String category;
         private List<String> topics;
         private String status;
+    }
+
+    @Data
+    static class GenerateTemplateRequest {
+        private com.codetest.agent.dto.ProblemSpec problemSpec;
+        private String language;
     }
 }
