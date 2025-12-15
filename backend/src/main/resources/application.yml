@@ -40,7 +40,10 @@ server:
   port: 8080
   address: 0.0.0.0
 
-logging:
   level:
     root: INFO
     com.codetest: DEBUG
+
+jwt:
+  expiration: 86400000 # 24 hours
+  refresh-expiration: 604800000 # 7 days
