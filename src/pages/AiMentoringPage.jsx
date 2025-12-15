@@ -120,6 +120,21 @@ const AiMentoringPage = () => {
 
   // const [tempCodeText, setTempCodeText] = useState(''); // Removed
   // const [tempCodeLanguage, setTempCodeLanguage] = useState('java'); // Removed
+  // Initial Template Loader
+  React.useEffect(() => {
+    if (showCodeModal && activeChat?.platform === 'programmers' && tempCodeLanguage) {
+        // Check if we need to load the initial template (only if code comes from default)
+         const isDefaultOrEmpty = !tempCodeText.trim() || Object.values(DEFAULT_CODE).some(code => code.trim() === tempCodeText.trim());
+         if (isDefaultOrEmpty) {
+             api.generateCodeTemplate(activeChat.problemSpec, tempCodeLanguage)
+                .then(template => {
+                    if(template) setTempCodeText(template);
+                })
+                .catch(e => console.error(e));
+         }
+    }
+  }, [showCodeModal]);
+
   const [testCases, setTestCases] = useState([]);
 
   const [tempPlatform, setTempPlatform] = useState("baekjoon");
@@ -1417,20 +1432,38 @@ int solution(int num1, int num2) {
                     onLanguageChange={(newLang) => {
                       setTempCodeLanguage(newLang);
                       
-                      // Determine correct template
+                      // Determine correct template based on LOCAL defaults first
                       let template = DEFAULT_CODE[newLang];
-                      if (activeChat?.platform === 'programmers') {
-                        if (newLang === 'java') template = DEFAULT_CODE['java_programmers'];
-                        else if (newLang === 'cpp' || newLang === 'c++') template = DEFAULT_CODE['cpp_programmers'];
-                        else if (newLang === 'c') template = DEFAULT_CODE['c_programmers'];
-                      }
+                      
+                      // Logic to fetch from API
+                      const fetchRealTemplate = async (lang) => {
+                          if (activeChat?.platform === 'programmers') {
+                            try {
+                                const fetchedTemplate = await api.generateCodeTemplate(activeChat.problemSpec, lang);
+                                if (fetchedTemplate) {
+                                    setTempCodeText(fetchedTemplate);
+                                    return;
+                                }
+                            } catch (error) {
+                                console.error("Failed to fetch template:", error);
+                            }
+                            
+                            // Fallback if fetch fails
+                            if (lang === 'java') template = DEFAULT_CODE['java_programmers'];
+                            else if (lang === 'cpp' || lang === 'c++') template = DEFAULT_CODE['cpp_programmers'];
+                            else if (lang === 'c') template = DEFAULT_CODE['c_programmers'];
+                            else if (lang === 'python') template = DEFAULT_CODE['python']; 
+                          }
+                          
+                          // If current code is empty or matches one of the default templates, switch to new template
+                          const isDefaultOrEmpty = !tempCodeText.trim() || Object.values(DEFAULT_CODE).some(code => code.trim() === tempCodeText.trim());
 
-                      // If current code is empty or matches one of the default templates, switch to new template
-                      const isDefaultOrEmpty = !tempCodeText.trim() || Object.values(DEFAULT_CODE).some(code => code.trim() === tempCodeText.trim());
-
-                      if (isDefaultOrEmpty) {
-                        setTempCodeText(template);
-                      }
+                          if (isDefaultOrEmpty) {
+                            setTempCodeText(template);
+                          }
+                      };
+                      
+                      fetchRealTemplate(newLang);
                     }}
                   />
                 </div>
