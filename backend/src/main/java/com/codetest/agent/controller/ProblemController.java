@@ -158,6 +158,14 @@ public class ProblemController {
 
         ProblemSpec spec = new ProblemSpec();
         spec.setSource("PROGRAMMERS");
+
+        // Extract ID from URL
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("/lessons/(\\d+)");
+        java.util.regex.Matcher matcher = pattern.matcher(url);
+        if (matcher.find()) {
+            spec.setSourceId(matcher.group(1));
+        }
+
         spec.setTitle(doc.title());
 
         Element container = doc.selectFirst(".guide-section-description");

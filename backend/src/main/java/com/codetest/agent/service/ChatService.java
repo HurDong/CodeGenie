@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 @Service
 @RequiredArgsConstructor
@@ -127,6 +130,39 @@ public class ChatService {
     }
 
     public String generateCodeTemplate(com.codetest.agent.dto.ProblemSpec spec, String language) {
+        // 1. Try scraping for Programmers
+        if (spec.getSource() != null && "PROGRAMMERS".equalsIgnoreCase(spec.getSource())
+                && spec.getSourceId() != null) {
+            try {
+                String progLang = language;
+                if ("c++".equalsIgnoreCase(language))
+                    progLang = "cpp";
+                else if ("python".equalsIgnoreCase(language))
+                    progLang = "python3";
+
+                String scrapUrl = "https://school.programmers.co.kr/learn/courses/30/lessons/" + spec.getSourceId()
+                        + "?language=" + progLang;
+                System.out.println("Attempting to scrape: " + scrapUrl + " (SourceId: " + spec.getSourceId() + ")");
+
+                Document doc = Jsoup.connect(scrapUrl)
+                        .userAgent(
+                                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                        .header("Accept",
+                                "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
+                        .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7")
+                        .referrer("https://school.programmers.co.kr/")
+                        .timeout(10000)
+                        .get();
+
+                Element textArea = doc.selectFirst("textarea#code");
+                if (textArea != null) {
+                    return textArea.text();
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to scrape Programmers template: " + e.getMessage());
+            }
+        }
+
         String langInstruction = "";
         String exampleOutput = "";
 
@@ -163,6 +199,16 @@ public class ChatService {
                         return answer;
                     }
                     """;
+        } else if ("python".equalsIgnoreCase(language)) {
+            langInstruction = """
+                    Generate a Python 'solution' function.
+                    Infer parameters from problem description.
+                    """;
+            exampleOutput = """
+                    def solution(num1, num2):
+                        answer = 0
+                        return answer
+                    """;
         } else {
             // Default to Java
             langInstruction = """
@@ -192,8 +238,11 @@ public class ChatService {
                 Task:
                 %s
 
-                Output ONLY the valid code. Do NOT include any markdown code blocks (```), explanations, or comments.
-                Just the raw code.
+                CRITICAL INSTRUCTION:
+                - Output ONLY the valid code.
+                - Do NOT include any markdown code blocks (```) or explanations.
+                - Do NOT implement the solution logic. Just return 0 or empty structures.
+                - Keep the 'solution' function body empty or minimal (e.g., return 0;).
 
                 Example Output:
                 %s
