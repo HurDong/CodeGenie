@@ -74,6 +74,8 @@ const CATEGORIES = {
   etc: { label: '기타', icon: '📌', color: '#64748b' },
 };
 
+import { useCodeEditor } from '../hooks/useCodeEditor';
+
 const AiMentoringPage = () => {
   const { isLoggedIn, loading } = useAuth();
   const navigate = useNavigate();
@@ -104,8 +106,18 @@ const AiMentoringPage = () => {
   });
   const [activeProblemTab, setActiveProblemTab] = useState("description");
   const [problemStep, setProblemStep] = useState("input"); // input | review
-  const [tempCodeText, setTempCodeText] = useState("");
-  const [tempCodeLanguage, setTempCodeLanguage] = useState("java");
+  /* New Hook Usage */
+  const {
+      code: tempCodeText,
+      language: tempCodeLanguage,
+      setLanguage: setTempCodeLanguage,
+      updateCode: setTempCodeText, // Alias to match existing usage or refactor usages
+      handleKeyDown: handleCodeKeyDown, // Use hook's handler
+      loadCode 
+  } = useCodeEditor('', 'java');
+
+  // const [tempCodeText, setTempCodeText] = useState(''); // Removed
+  // const [tempCodeLanguage, setTempCodeLanguage] = useState('java'); // Removed
   const [testCases, setTestCases] = useState([]);
 
   const [tempPlatform, setTempPlatform] = useState("baekjoon");
@@ -405,6 +417,10 @@ int main() {
       toast.error("코드 저장 실패");
     }
   };
+
+  /* Smart Indentation Logic Moved to useCodeEditor Hook */
+  // Old handler removed
+
 
   const handleFetchProblem = async () => {
     if (!tempProblemUrl) return;
@@ -1361,6 +1377,7 @@ int main() {
                   <Editor
                     value={tempCodeText}
                     onValueChange={(code) => setTempCodeText(code)}
+                    onKeyDown={handleCodeKeyDown}
                     highlight={(code) => highlight(code, languages[tempCodeLanguage] || languages.clike)}
                     padding={15}
                     className="code-editor"
