@@ -1,16 +1,8 @@
-✨ feat: Initialize Capacitor for Android mobile app
+✨ feat: Implement Server-Side Execution and Custom Test Cases
 
-기존 웹 프로젝트에 Capacitor를 도입하여 모바일 앱(Android)으로 전환할 수 있도록 구현했습니다.
+서버 사이드 코드 실행 엔진 연동 및 사용자 정의 테스트 케이스 관리 기능을 구현했습니다.
 
-1. Capacitor 및 Android 플랫폼 추가
-   - `@capacitor/core`, `@capacitor/cli`, `@capacitor/android` 의존성 설치
-   - `android` 플랫폼 디렉토리 생성 및 초기화
-   - `capacitor.config.json` 설정 파일 생성
-
-2. Android 에뮬레이터 환경 대응
-   - `local.properties` 생성하여 SDK 경로 자동 설정
-   - `src/api/client.js` 및 `src/api/authService.js`에 플랫폼 감지 로직 추가
-   - 에뮬레이터 환경(Native)일 경우 API Base URL을 `10.0.2.2:8080`으로 자동 전환하도록 수정
-
-3. Google 로그인 호환성 개선
-   - `Navbar.jsx`에서 Capacitor 플랫폼 감지를 통해 에뮬레이터용 OAuth 리디렉션 URL 분기 처리
+- 서버 사이드 코드 실행 엔진 연동 (ProcessBuilder, 비동기 스트림 처리)
+- 입력 형식(Input Format) 불일치 및 인코딩(UTF-8) 문제 해결
+- 사용자 정의 테스트 케이스(User-Defined Test Case) 추가/삭제/저장 기능 구현
+- 새로고침 시에도 사용자 정의 플래그가 유지되도록 DTO 직렬화(@JsonProperty) 수정

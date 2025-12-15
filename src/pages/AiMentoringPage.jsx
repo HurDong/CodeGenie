@@ -48,14 +48,19 @@ const MODES = {
     placeholder: "풀이 과정에 대해 질문하세요...",
     color: "#3b82f6",
   },
-  COUNTEREXAMPLE: {
-    id: "counterexample",
-    name: "반례/디버깅",
+  VERIFICATION: {
+    id: "verification",
+    name: "검증 및 디버깅",
     icon: "🧪",
-    description: "코드의 오류를 찾는 반례 제시",
-    placeholder: "코드를 입력하고 반례를 요청하세요...",
+    description: "반례 찾기 및 디버깅 가이드",
+    placeholder: "코드를 검증하거나 디버깅 도움을 요청하세요...",
     color: "#ef4444",
+    subModes: [
+      { id: "counterexample", name: "반례 찾기", description: "논리적 오류 및 반례 탐색" },
+      { id: "debugging", name: "디버깅", description: "로그 삽입 위치 및 디버깅 가이드" }
+    ]
   },
+
 };
 const CATEGORIES = {
   implementation: { label: '구현', icon: '⚙️', color: '#14b8a6' },
@@ -132,10 +137,11 @@ const AiMentoringPage = () => {
     chatSessions.find((chat) => chat.id === activeChatId) || chatSessions[0];
   const messages = activeChat?.messages || [];
   // Helper to find parent mode
+  // Helper to find parent mode
   const getParentMode = (modeId) => {
     if (modeId.startsWith("understanding")) return MODES.UNDERSTANDING;
     if (modeId === "solution") return MODES.SOLUTION;
-    if (modeId === "counterexample") return MODES.COUNTEREXAMPLE;
+    if (modeId === "counterexample" || modeId === "debugging") return MODES.VERIFICATION;
     return MODES.UNDERSTANDING;
   };
 
@@ -220,8 +226,10 @@ const AiMentoringPage = () => {
     }
   };
 
-  const handleModeChange = (newMode) => {
+  const handleModeChange = async (newMode) => {
     setActiveMode(newMode);
+    
+    // Optimistic update
     setChatSessions((prevSessions) =>
       prevSessions.map((chat) => {
         if (chat.id === activeChatId) {
@@ -230,6 +238,16 @@ const AiMentoringPage = () => {
         return chat;
       })
     );
+
+    // Persist to backend
+    if (activeChatId) {
+      try {
+        await api.updateConversation(activeChatId, { mode: newMode });
+      } catch (error) {
+        console.error("Failed to update mode:", error);
+        toast.error("모드 변경 저장 실패");
+      }
+    }
   };
 
   const handleOpenProblemModal = () => {
@@ -288,10 +306,11 @@ int main() {
     if (activeChat?.problemSpec?.examples && activeChat.problemSpec.examples.length > 0) {
       setTestCases(activeChat.problemSpec.examples.map(ex => ({
         input: ex.input,
-        expectedOutput: ex.output
+        expectedOutput: ex.output,
+        isUserDefined: ex.isUserDefined // Load flag
       })));
     } else {
-      setTestCases([{ input: "", expectedOutput: "" }]);
+      setTestCases([{ input: "", expectedOutput: "", isUserDefined: true }]); // Default new is UserDefined
     }
 
     setShowCodeModal(true);
@@ -347,13 +366,34 @@ int main() {
 
       await api.updateConversation(chatId, {
         userCode: tempCodeText,
-        codeLanguage: tempCodeLanguage
+        codeLanguage: tempCodeLanguage,
+        // PERSIST Test Cases: Merge existing spec with new examples
+        problemSpec: {
+           ...(activeChat?.problemSpec || {}),
+           examples: testCases.map(tc => ({
+             input: tc.input,
+             output: tc.expectedOutput,
+             isUserDefined: tc.isUserDefined
+           }))
+        }
       });
 
       setChatSessions((prevSessions) =>
         prevSessions.map((chat) => {
           if (chat.id === chatId) {
-            return { ...chat, userCode: tempCodeText, codeLanguage: tempCodeLanguage };
+            return {
+              ...chat,
+              userCode: tempCodeText,
+              codeLanguage: tempCodeLanguage,
+              problemSpec: {
+                ...(activeChat?.problemSpec || {}),
+                examples: testCases.map(tc => ({
+                  input: tc.input,
+                  output: tc.expectedOutput,
+                  isUserDefined: tc.isUserDefined
+                }))
+              }
+            };
           }
           return chat;
         })
@@ -477,6 +517,7 @@ int main() {
     const isUnderstanding = activeMode.startsWith("understanding");
     const isSolution = activeMode === "solution";
     const isCounterexample = activeMode === "counterexample";
+    const isDebugging = activeMode === "debugging";
 
     if ((isUnderstanding || isSolution) && !hasProblem) {
       toast.error("이 모드를 사용하려면 먼저 '문제'를 입력해야 합니다.", {
@@ -487,9 +528,9 @@ int main() {
       return;
     }
 
-    if (isCounterexample) {
+    if (isCounterexample || isDebugging) {
       if (!hasProblem) {
-        toast.error("반례를 찾으려면 '문제' 정보가 필요합니다.", {
+        toast.error(`${isDebugging ? '디버깅' : '반례'}를 위해서는 '문제' 정보가 필요합니다.`, {
           icon: "📄",
           duration: 4000
         });
@@ -497,7 +538,7 @@ int main() {
         return;
       }
       if (!hasCode) {
-        toast.error("반례를 찾으려면 '코드' 정보가 필요합니다.", {
+        toast.error(`${isDebugging ? '디버깅' : '반례'}를 위해서는 '코드' 정보가 필요합니다.`, {
           icon: "⚡",
           duration: 4000
         });
@@ -846,9 +887,11 @@ int main() {
 
           <div className="input-area">
             {/* Sub-mode Selector for Understanding */}
+            {/* Generic Sub-mode Selector */}
             <AnimatePresence>
-              {currentParentMode.id === "understanding" && (
+              {currentParentMode.subModes && (
                 <motion.div
+                  key={currentParentMode.id}
                   initial={{ opacity: 0, height: 0, y: 10 }}
                   animate={{ opacity: 1, height: "auto", y: 0 }}
                   exit={{ opacity: 0, height: 0, y: 10 }}
@@ -862,7 +905,7 @@ int main() {
                     overflow: 'hidden'
                   }}
                 >
-                  {MODES.UNDERSTANDING.subModes.map((subMode) => (
+                  {currentParentMode.subModes.map((subMode) => (
                     <motion.button
                       key={subMode.id}
                       whileHover={{ scale: 1.05 }}
@@ -872,9 +915,9 @@ int main() {
                       style={{
                         padding: '6px 12px',
                         borderRadius: '16px',
-                        border: activeMode === subMode.id ? '1px solid #10b981' : '1px solid #334155',
-                        background: activeMode === subMode.id ? 'rgba(16, 185, 129, 0.1)' : 'rgba(30, 41, 59, 0.5)',
-                        color: activeMode === subMode.id ? '#10b981' : '#94a3b8',
+                        border: activeMode === subMode.id ? `1px solid ${currentParentMode.color}` : '1px solid #334155',
+                        background: activeMode === subMode.id ? `${currentParentMode.color}1a` : 'rgba(30, 41, 59, 0.5)',
+                        color: activeMode === subMode.id ? currentParentMode.color : '#94a3b8',
                         fontSize: '0.85rem',
                         cursor: 'pointer',
                         transition: 'border-color 0.2s, background-color 0.2s',
@@ -884,7 +927,14 @@ int main() {
                       }}
                       title={subMode.description}
                     >
-                      <span>{subMode.id === 'understanding_summary' ? '📖' : subMode.id === 'understanding_trace' ? '🧩' : '💡'}</span>
+                      {/* Simple logic for icons, can be enhanced later if needed */}
+                      <span>
+                        {subMode.id.includes('summary') ? '📖' :
+                         subMode.id.includes('trace') ? '🧩' :
+                         subMode.id.includes('hint') ? '💡' :
+                         subMode.id.includes('counter') ? '🧪' :
+                         subMode.id.includes('debug') ? '🐞' : '🔹'}
+                      </span>
                       {subMode.name}
                     </motion.button>
                   ))}
@@ -902,9 +952,9 @@ int main() {
                       key={mode.id}
                       className={`mode-btn ${isActive ? "active" : ""}`}
                       onClick={() => {
-                        // If switching to understanding, default to summary
-                        if (mode.id === "understanding") {
-                          handleModeChange("understanding_summary");
+                        // If mode has subModes, default to the first one
+                        if (mode.subModes && mode.subModes.length > 0) {
+                          handleModeChange(mode.subModes[0].id);
                         } else {
                           handleModeChange(mode.id);
                         }
@@ -1374,7 +1424,7 @@ int main() {
                             코드를 실행할 때 사용할 테스트 케이스를 입력하세요.
                           </span>
                           <button
-                            onClick={() => setTestCases([...testCases, { input: "", expectedOutput: "" }])}
+                            onClick={() => setTestCases([...testCases, { input: "", expectedOutput: "", isUserDefined: true }])}
                             style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500' }}
                           >
                             + 케이스 추가
@@ -1411,17 +1461,21 @@ int main() {
                                   style={{ fontSize: '0.9rem', padding: '0.5rem', minHeight: '60px', resize: 'vertical', width: '100%', background: '#0f172a' }}
                                 />
                               </div>
-                              <button
-                                onClick={() => {
-                                  const newCases = [...testCases];
-                                  newCases.splice(idx, 1);
-                                  setTestCases(newCases);
-                                }}
-                                style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', marginTop: '2rem', padding: '4px' }}
-                                title="삭제"
-                              >
-                                ✕
-                              </button>
+                              {tc.isUserDefined ? (
+                                <button
+                                  onClick={() => {
+                                    const newCases = [...testCases];
+                                    newCases.splice(idx, 1);
+                                    setTestCases(newCases);
+                                  }}
+                                  style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', marginTop: '2rem', padding: '4px' }}
+                                  title="삭제"
+                                >
+                                  ✕
+                                </button>
+                              ) : (
+                                <div style={{ width: '24px' }}></div> // Spacer for system cases
+                              )}
                             </div>
                           ))}
                         </div>

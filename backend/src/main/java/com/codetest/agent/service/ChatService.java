@@ -18,6 +18,8 @@ public class ChatService {
 
     private final ConversationRepository conversationRepository;
     private final LlmService llmService;
+    private final CodeExecutionService codeExecutionService; // Newly added
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
     public Conversation startChat(String mode, String problemText, String userCode, String title, String userId) {
         Conversation conversation = new Conversation();
@@ -88,7 +90,15 @@ public class ChatService {
             }
         }
 
-        String aiResponseContent = llmService.getChatResponse(messages);
+        String aiResponseContent;
+
+        // [Logic Branch] If Counterexample mode -> Use Execution-Guided Verification
+        if ("counterexample".equalsIgnoreCase(conversation.getMode())) {
+            aiResponseContent = handleCounterexampleLoop(conversation, messages);
+        } else {
+            // Default: Standard LLM call
+            aiResponseContent = llmService.getChatResponse(messages);
+        }
 
         // [Strategy Anchor] Detect and update strategy
         if (conversation.getMode().equalsIgnoreCase("solution") && aiResponseContent.contains("[UPDATE_STRATEGY:")) {
@@ -114,6 +124,78 @@ public class ChatService {
         conversationRepository.save(conversation);
 
         return aiMessage;
+    }
+
+    private String handleCounterexampleLoop(Conversation conversation, List<Map<String, Object>> messages) {
+        // 1. Get JSON Test Cases from LLM
+        String rawJson = llmService.getChatResponse(messages);
+
+        // Sanitize JSON (sometimes LLM wraps it in markdown code blocks)
+        String jsonContent = rawJson;
+        if (jsonContent.contains("```json")) {
+            jsonContent = jsonContent.substring(jsonContent.indexOf("```json") + 7);
+            if (jsonContent.contains("```")) {
+                jsonContent = jsonContent.substring(0, jsonContent.lastIndexOf("```"));
+            }
+        } else if (jsonContent.contains("```")) {
+            jsonContent = jsonContent.substring(jsonContent.indexOf("```") + 3);
+            if (jsonContent.contains("```")) {
+                jsonContent = jsonContent.substring(0, jsonContent.lastIndexOf("```"));
+            }
+        }
+        jsonContent = jsonContent.trim();
+
+        try {
+            // 2. Parse Test Cases
+            List<Map<String, String>> testCases = objectMapper.readValue(jsonContent,
+                    new com.fasterxml.jackson.core.type.TypeReference<>() {
+                    });
+
+            // 3. Execute & Verify
+            StringBuilder report = new StringBuilder();
+            boolean foundCounterexample = false;
+
+            for (Map<String, String> testCase : testCases) {
+                String input = testCase.get("input");
+                String expected = testCase.get("expected");
+
+                CodeExecutionService.ExecutionResult result = codeExecutionService.runCode(conversation.getUserCode(),
+                        input, "java");
+
+                if (!result.success()) {
+                    // Compilation or Runtime Error
+                    return "❌ **실행 오류 발생 (Execution Error)**\n\n" +
+                            "코드 실행 중 오류가 발생했습니다:\n" +
+                            "```\n" + result.error() + "\n```";
+                }
+
+                String actual = result.output();
+                if (!expected.trim().equals(actual.trim())) {
+                    // Counterexample Found!
+                    foundCounterexample = true;
+                    report.append("❌ **반례 발견 (Counterexample Found)!**\n\n")
+                            .append("**입력 (Input)**: `").append(input).append("`\n")
+                            .append("**예상 결과 (Expected)**: `").append(expected).append("`\n")
+                            .append("**실제 실행 결과 (Actual Execution)**: `").append(actual).append("`\n")
+                            .append("**이유**: 서버에서 실제 코드를 실행한 결과, 예상 값과 다릅니다.");
+                    break;
+                }
+            }
+
+            if (!foundCounterexample) {
+                report.append("✅ **검증 통과 (Verification Passed)!**\n\n")
+                        .append("LLM이 생성한 5개의 테스트 케이스(Edge Case 포함)를 실제 서버에서 돌려본 결과, 모두 정답과 일치합니다.\n")
+                        .append("작성하신 로직은 현재 검증 범위 내에서 올바릅니다.");
+            }
+
+            return report.toString();
+
+        } catch (Exception e) {
+            // Fallback if JSON parsing fails or other issues: return original LLM text (but
+            // warn)
+            System.err.println("Verification Failed: " + e.getMessage());
+            return rawJson + "\n\n(Note: Automated verification failed due to format issues. Showing raw AI response.)";
+        }
     }
 
     private String getSystemPrompt(String mode) {
@@ -178,27 +260,38 @@ public class ChatService {
                     "3. **의사 코드 (Pseudocode)**: Show the logic in pseudocode for the suggested step.\n" +
                     "- Answer in Korean.";
         } else if ("counterexample".equalsIgnoreCase(mode)) {
-            return "You are CodeGenie, a helpful AI coding mentor.\n" +
-                    "The user wants you to find a 'Counterexample' (an input where their code fails).\n" +
+            return "You are a 'Test Case Generator'.\n" +
+                    "The user wants to verify their code against counterexamples.\n" +
+                    "Your goal is to generate 5 robust test cases in JSON format.\n" +
                     "[Process]\n" +
-                    "1. **Analyze**: Understand the problem constraints and the user's logic.\n" +
-                    "2. **Simulate**: Mentally run the user's code with valid inputs (strictly observing constraints).\n"
+                    "1. **Analyze Input Format**: Check if the problem requires a 'Test Case Count' (T) at the start.\n"
                     +
-                    "3. **Decision**:\n" +
-                    "   - **CASE A (Code is Correct)**: If the logic holds for all valid inputs, **DO NOT** say 'Here is a counterexample'.\n"
+                    "   - If YES (e.g., 'First line is T'), your 'input' string MUST start with '1\\n' (representing 1 test case) followed by the actual input.\n"
                     +
-                    "     Instead, say: \"✅ **검증 통과 (Verification Passed)!**\"\n" +
-                    "     \"반례를 찾을 수 없습니다. 작성하신 로직은 현재 문제의 제약 조건 내에서 완벽해 보입니다.\"\n" +
-                    "     (Optional: You can provide a 'Verification Test Case' to show it works, but clearly label it as such.)\n"
+                    "   - Failing to do this will cause `NoSuchElementException` in user code.\n" +
+                    "2. **Draft 5 Inputs**: 1 Basic, 2 Edge, 2 Random.\n" +
+                    "3. **Compute Correct Output**: For the constructed input.\n" +
+                    "4. Output STRICT JSON only. No markdown.\n" +
+                    "\n" +
+                    "[JSON Format]\n" +
+                    "[\n" +
+                    "  {\"input\": \"1\\n5\", \"expected\": \"44\"}, \n" +
+                    "  {\"input\": \"1\\n1\", \"expected\": \"1\"}\n" +
+                    "]\n" +
+                    "(Note: If problem does NOT ask for T, just send \"5\" or \"1\".)";
+        } else if ("debugging".equalsIgnoreCase(mode)) {
+            return "You are CodeGenie, a helpful AI coding mentor specialized in 'Strategic Debugging'.\n" +
+                    "The user wants to know WHERE and HOW to debug their code.\n" +
+                    "[Guidelines]\n" +
+                    "1. **No Vague Advice**: Do NOT say 'Check the loop' or 'Use print'. Show EXACTLY where to put the print statement.\n"
                     +
-                    "   - **CASE B (Bug Found)**: If and ONLY IF you find an input where `UserOutput != ExpectedOutput`,\n"
+                    "2. **Show Code**: \n" +
+                    "   - Identify the most critical state changes (loops, recursion, dp updates).\n" +
+                    "   - Provide a code snippet with **Print Statements Inserted**.\n" +
+                    "   - Use specific formatting: `Java: System.out.println(\"[DEBUG] i=\" + i + \", dp=\" + dp[i]);`\n"
                     +
-                    "     say: \"❌ **반례 발견 (Counterexample Found)!**\"\n" +
-                    "     Then provide:\n" +
-                    "     * **입력 (Input)**: [Specific Value inside constraints]\n" +
-                    "     * **예상 결과 (Expected)**: [Correct output]\n" +
-                    "     * **현재 코드 결과 (Your Output)**: [User's likely incorrect output]\n" +
-                    "     * **이유 (Reason)**: [Why it fails]\n" +
+                    "3. **Analyze Output**: Explain what the user should look for in the console output (e.g., 'If [DEBUG] shows -1, your initialization is wrong').\n"
+                    +
                     "Answer in Korean.";
         } else {
             return "You are CodeGenie, a helpful AI coding mentor.\n" +
@@ -256,10 +349,13 @@ public class ChatService {
                 .orElseThrow(() -> new IllegalArgumentException("Conversation not found"));
     }
 
-    public Conversation updateConversation(String id, String problemText, String userCode, String codeLanguage,
+    public Conversation updateConversation(String id, String mode, String problemText, String userCode,
+            String codeLanguage,
             com.codetest.agent.dto.ProblemSpec problemSpec, String platform, String problemUrl, String title,
             String category, List<String> topics, String status) {
         Conversation conversation = getConversation(id);
+        if (mode != null)
+            conversation.setMode(mode);
         if (problemText != null)
             conversation.setProblemText(problemText);
         if (userCode != null)

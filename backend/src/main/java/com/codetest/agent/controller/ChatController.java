@@ -55,7 +55,8 @@ public class ChatController {
     @PutMapping("/chat/{id}")
     public ApiResponse<Conversation> updateConversation(@PathVariable String id,
             @RequestBody UpdateConversationRequest request) {
-        Conversation conversation = chatService.updateConversation(id, request.getProblemText(), request.getUserCode(),
+        Conversation conversation = chatService.updateConversation(id, request.getMode(), request.getProblemText(),
+                request.getUserCode(),
                 request.getCodeLanguage(), request.getProblemSpec(), request.getPlatform(), request.getProblemUrl(),
                 request.getTitle(), request.getCategory(), request.getTopics(), request.getStatus());
         return ApiResponse.success(conversation, "대화 정보가 업데이트되었습니다.");
@@ -83,6 +84,7 @@ public class ChatController {
 
     @Data
     static class UpdateConversationRequest {
+        private String mode;
         private String problemText;
         private String userCode;
         private String codeLanguage;
