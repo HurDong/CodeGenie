@@ -243,10 +243,41 @@ public class CodeExecutionService {
                 String stdout = outputHandler.getStdout();
                 String stderr = outputHandler.getStderr();
 
-                result.setActualOutput(stdout.trim());
+                String separator = "===CODEGENIE_OUTPUT_START===";
+                String outputForValidation = stdout;
+                String outputForDisplay = stdout;
+
+                if (stdout.contains(separator)) {
+                    String[] parts = stdout.split(separator);
+                    // parts[0] is logs, parts[1] is result
+                    if (parts.length > 1) {
+                        outputForValidation = parts[1].trim();
+
+                        String logs = parts[0].trim();
+                        String resultValue = parts[1].trim();
+
+                        if (!logs.isEmpty()) {
+                            outputForDisplay = logs + "\n\n👉 결과값: " + resultValue;
+                        } else {
+                            outputForDisplay = resultValue;
+                        }
+
+                    } else {
+                        outputForValidation = "";
+                        outputForDisplay = stdout.replace(separator, "").trim();
+                    }
+                } else {
+                    // Fallback for cases without separator (e.g. usage of Main class)
+                    outputForDisplay = stdout.trim();
+                }
+
+                result.setActualOutput(outputForDisplay.trim());
 
                 if (runProcess.exitValue() != 0) {
                     result.setPassed(false);
+                    // If we have semantic error but also exit code !0 (unlikely for logic error,
+                    // but likely for crash)
+                    // If we found a result but also crashed? rare.
                     result.setError("Runtime Error: " + stderr);
                 } else {
                     if (testCase.getExpectedOutput() == null || testCase.getExpectedOutput().isEmpty()) {
@@ -254,7 +285,7 @@ public class CodeExecutionService {
                     } else {
                         // Normalize line endings and trim
                         String expected = testCase.getExpectedOutput().trim().replace("\r\n", "\n");
-                        String actual = stdout.trim().replace("\r\n", "\n");
+                        String actual = outputForValidation.trim().replace("\r\n", "\n");
                         result.setPassed(expected.equals(actual));
                     }
                 }
@@ -361,6 +392,7 @@ public class CodeExecutionService {
                         Object[] params = new Object[paramTypes.length];
 
                         Scanner scanner = new Scanner(System.in);
+                        scanner.useDelimiter("[,\\\\s]+");
                         // Use a custom delimiter pattern? Maybe just tokenize by whitespace unless string contains spaces.
                         // Ideally, we parse tokens based on type.
 
@@ -374,6 +406,7 @@ public class CodeExecutionService {
                         }
 
                         Object result = method.invoke(instance, params);
+                        System.out.println("===CODEGENIE_OUTPUT_START===");
                         printResult(result);
 
                     } catch (Throwable e) {
