@@ -386,47 +386,35 @@ int solution(int num1, int num2) {
     if (!tempProblemUrl) return;
     setIsFetching(true);
     try {
-      const response = await fetch(`/api/parse?url=${encodeURIComponent(tempProblemUrl)}&platform=${tempPlatform}`);
-      // ... (response checking) ...
-      const contentType = response.headers.get("content-type");
-      const isJson = contentType && contentType.includes("application/json");
-
-      if (isJson) {
-        const data = await response.json();
-        // ... (error checks) ...
-        setTempProblemData(data);
+      // Use api client instead of direct fetch
+      const data = await api.getProblemData(tempProblemUrl, tempPlatform);
         
-        // Generate Code Template for Programmers
-        if (tempPlatform === "programmers") {
-          try {
-             const template = await api.generateCodeTemplate(data, tempCodeLanguage || 'java');
-             if (template && (template.includes("class Solution") || template.includes("solution"))) {
-                setTempCodeText(template);
-             } else {
-                 let fallback = DEFAULT_CODE[tempCodeLanguage];
-                 if (tempCodeLanguage === 'java') fallback = DEFAULT_CODE['java_programmers'];
-                 else if (tempCodeLanguage === 'cpp' || tempCodeLanguage === 'c++') fallback = DEFAULT_CODE['cpp_programmers'];
-                 else if (tempCodeLanguage === 'c') fallback = DEFAULT_CODE['c_programmers'];
-                 setTempCodeText(fallback || DEFAULT_CODE[tempCodeLanguage]);
-             }
-          } catch (err) {
-              console.error("Failed to generate template:", err);
-              let fallback = DEFAULT_CODE[tempCodeLanguage];
-              if (tempCodeLanguage === 'java') fallback = DEFAULT_CODE['java_programmers'];
-              else if (tempCodeLanguage === 'cpp' || tempCodeLanguage === 'c++') fallback = DEFAULT_CODE['cpp_programmers'];
-              else if (tempCodeLanguage === 'c') fallback = DEFAULT_CODE['c_programmers'];
-              setTempCodeText(fallback || DEFAULT_CODE[tempCodeLanguage]);
-          }
-        }
+      setTempProblemData(data);
         
-        setProblemStep("review");
-      } else {
-        if (!response.ok) {
-          const text = await response.text();
-          throw new Error(`Server error: ${response.status} - ${text.substring(0, 100)}`);
+      // Generate Code Template for Programmers
+      if (tempPlatform === "programmers") {
+        try {
+            const template = await api.generateCodeTemplate(data, tempCodeLanguage || 'java');
+            if (template && (template.includes("class Solution") || template.includes("solution"))) {
+            setTempCodeText(template);
+            } else {
+                let fallback = DEFAULT_CODE[tempCodeLanguage];
+                if (tempCodeLanguage === 'java') fallback = DEFAULT_CODE['java_programmers'];
+                else if (tempCodeLanguage === 'cpp' || tempCodeLanguage === 'c++') fallback = DEFAULT_CODE['cpp_programmers'];
+                else if (tempCodeLanguage === 'c') fallback = DEFAULT_CODE['c_programmers'];
+                setTempCodeText(fallback || DEFAULT_CODE[tempCodeLanguage]);
+            }
+        } catch (err) {
+            console.error("Failed to generate template:", err);
+            let fallback = DEFAULT_CODE[tempCodeLanguage];
+            if (tempCodeLanguage === 'java') fallback = DEFAULT_CODE['java_programmers'];
+            else if (tempCodeLanguage === 'cpp' || tempCodeLanguage === 'c++') fallback = DEFAULT_CODE['cpp_programmers'];
+            else if (tempCodeLanguage === 'c') fallback = DEFAULT_CODE['c_programmers'];
+            setTempCodeText(fallback || DEFAULT_CODE[tempCodeLanguage]);
         }
-        throw new Error("Received non-JSON response from server");
       }
+      
+      setProblemStep("review");
 
     } catch (error) {
       console.error("Error fetching problem:", error);
@@ -434,66 +422,11 @@ int solution(int num1, int num2) {
       const isServerError = error.message.includes("Failed to fetch") || error.message.includes("Server error");
 
       if (isServerError) {
-        toast((t) => (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '250px' }}>
-            <div style={{ fontWeight: '600' }}>서버 연결 실패 (백엔드 실행 필요)</div>
-            <div style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>데모 데이터를 대신 불러오시겠습니까?</div>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
-              <button
-                onClick={() => toast.dismiss(t.id)}
-                style={{
-                  padding: '6px 12px',
-                  background: 'transparent',
-                  color: '#94a3b8',
-                  border: '1px solid #475569',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '0.85rem'
-                }}
-              >
-                취소
-              </button>
-              <button
-                onClick={() => {
-                  setTempProblemData({
-                    title: "A+B",
-                    description: "두 정수 A와 B를 입력받은 다음, A+B를 출력하는 프로그램을 작성하시오.",
-                    inputFormat: "첫째 줄에 A와 B가 주어진다. (0 < A, B < 10)",
-                    outputFormat: "첫째 줄에 A+B를 출력한다.",
-                    constraints: "",
-                    timeLimit: "1초",
-                    memoryLimit: "128MB",
-                    examples: [{ input: "1 2", output: "3" }]
-                  });
-                  setProblemStep("review");
-                  toast.dismiss(t.id);
-                }}
-                style={{
-                  padding: '6px 12px',
-                  background: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '0.85rem',
-                  fontWeight: '500'
-                }}
-              >
-                불러오기
-              </button>
-            </div>
-          </div>
-        ), {
-          duration: 8000,
-          style: {
-            background: '#1e293b',
-            color: '#fff',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '16px',
-          },
-        });
+        toast.error("서버 연결에 실패했습니다. 백엔드가 실행 중인지 확인해주세요.");
         return;
       }
+
+      toast.error(`문제 정보를 가져오는데 실패했습니다: ${error.message}`);
 
       toast.error(`문제 정보를 가져오는데 실패했습니다: ${error.message}`);
     } finally {

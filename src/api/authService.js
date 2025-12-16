@@ -3,8 +3,9 @@ import toast from 'react-hot-toast';
 
 
 
-// DEBUG: Force Emulator URL for testing
-const API_BASE_URL = Capacitor.isNativePlatform() ? 'http://10.0.2.2:8080/api/auth' : '/api/auth';
+// Hardcoded for stability - use PROD flag
+const BASE_URL = import.meta.env.PROD ? 'https://code-genie.duckdns.org/api' : '/api';
+const API_BASE_URL = `${BASE_URL}/auth`;
 // alert(`Current Platform: ${Capacitor.getPlatform()}, URL: ${API_BASE_URL}`); // Uncomment for debugging
 
 const getHeaders = () => {

@@ -1,6 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 
-const API_BASE_URL = Capacitor.isNativePlatform() ? 'http://10.0.2.2:8080/api' : '/api';
+const API_BASE_URL = import.meta.env.PROD ? 'https://code-genie.duckdns.org/api' : (Capacitor.isNativePlatform() ? 'http://10.0.2.2:8080/api' : '/api');
 
 const getHeaders = () => {
   const token = localStorage.getItem('accessToken');

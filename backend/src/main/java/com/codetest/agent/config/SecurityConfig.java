@@ -68,7 +68,8 @@ public class SecurityConfig {
                 CorsConfiguration configuration = new CorsConfiguration();
                 configuration.setAllowedOrigins(
                                 List.of("http://localhost:5173", "http://localhost", "http://10.0.2.2",
-                                                "capacitor://localhost", "http://localhost:3000")); // Allow
+                                                "capacitor://localhost", "http://localhost:3000",
+                                                "https://hurdong.github.io")); // Allow Web & Mobile App & GitHub Pages
                 // Web
                 // &
                 // Mobile

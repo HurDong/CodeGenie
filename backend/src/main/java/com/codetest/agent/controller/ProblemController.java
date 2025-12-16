@@ -57,23 +57,20 @@ public class ProblemController {
             }
         }
 
-        Document doc = Jsoup.connect(url)
-                .userAgent(
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                .header("Accept",
-                        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
-                .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7")
-                .header("Referer", "https://www.acmicpc.net/")
-                .header("Upgrade-Insecure-Requests", "1")
-                .header("Sec-Fetch-Dest", "document")
-                .header("Sec-Fetch-Mode", "navigate")
-                .header("Sec-Fetch-Site", "same-origin")
-                .header("Sec-Fetch-User", "?1")
-                .header("sec-ch-ua", "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"")
-                .header("sec-ch-ua-mobile", "?0")
-                .header("sec-ch-ua-platform", "\"Windows\"")
-                .timeout(10000)
-                .get();
+        Document doc;
+        try {
+            doc = Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)")
+                    .referrer("https://www.google.com/")
+                    .timeout(10000)
+                    .get();
+        } catch (org.jsoup.HttpStatusException e) {
+            if (e.getStatusCode() == 403) {
+                throw new IOException(
+                        "Access Denied (403) by Baekjoon. Server IP might be blocked or User-Agent rejected.", e);
+            }
+            throw e;
+        }
 
         ProblemSpec spec = new ProblemSpec();
         spec.setSource("BAEKJOON");
