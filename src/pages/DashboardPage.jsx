@@ -11,6 +11,93 @@ import lampLevel3 from '../assets/badges/lamp_level_3.png';
 import lampLevel4 from '../assets/badges/lamp_level_4.png';
 import lampLevel5 from '../assets/badges/lamp_level_5.png';
 
+const InfoTooltip = ({ type }) => {
+    const [isVisible, setIsVisible] = React.useState(false);
+
+    const content = type === 'tier' ? (
+        <div style={{ minWidth: '200px' }}>
+            <div style={{ color: '#fbbf24', fontWeight: '700', marginBottom: '6px', fontSize: '0.9rem' }}>🏆 티어 (Total Solved)</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '4px 12px', fontSize: '0.8rem', color: '#94a3b8' }}>
+                <span>Diamond</span> <span style={{ color: '#e2e8f0' }}>100+ 문제</span>
+                <span>Platinum</span> <span style={{ color: '#e2e8f0' }}>50+ 문제</span>
+                <span>Gold</span> <span style={{ color: '#e2e8f0' }}>20+ 문제</span>
+                <span>Silver</span> <span style={{ color: '#e2e8f0' }}>10+ 문제</span>
+                <span>Bronze</span> <span style={{ color: '#e2e8f0' }}>기본</span>
+            </div>
+        </div>
+    ) : (
+        <div style={{ minWidth: '220px' }}>
+            <div style={{ color: '#f472b6', fontWeight: '700', marginBottom: '6px', fontSize: '0.9rem' }}>⚡ 레벨 (Streak)</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '4px 12px', fontSize: '0.8rem', color: '#94a3b8' }}>
+                <span>God of Genie</span> <span style={{ color: '#e2e8f0' }}>30일 연속</span>
+                <span>Grandmaster</span> <span style={{ color: '#e2e8f0' }}>14일 연속</span>
+                <span>Sorcerer</span> <span style={{ color: '#e2e8f0' }}>7일 연속</span>
+                <span>Apprentice</span> <span style={{ color: '#e2e8f0' }}>3일 연속</span>
+                <span>Novice</span> <span style={{ color: '#e2e8f0' }}>기본</span>
+            </div>
+        </div>
+    );
+
+    return (
+        <div 
+            style={{ position: 'relative', display: 'inline-flex', marginLeft: '6px', verticalAlign: 'middle', zIndex: 50 }}
+            onMouseEnter={() => setIsVisible(true)}
+            onMouseLeave={() => setIsVisible(false)}
+        >
+            <div style={{
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                border: '1px solid rgba(148, 163, 184, 0.4)',
+                color: '#94a3b8',
+                fontSize: '0.7rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'help',
+                transition: 'all 0.2s',
+                marginTop: '-1px'
+            }}>
+                ?
+            </div>
+            {isVisible && (
+                <div style={{
+                    position: 'absolute',
+                    top: '24px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: 'rgba(15, 23, 42, 0.95)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(12px)',
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    width: 'max-content',
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                    fontSize: '0.85rem',
+                    lineHeight: '1.5',
+                    color: '#e2e8f0',
+                    pointerEvents: 'none',
+                    textAlign: 'left'
+                }}>
+                    {content}
+                    {/* Arrow */}
+                    <div style={{
+                        position: 'absolute',
+                        top: '-4px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: 0,
+                        height: 0,
+                        borderLeft: '4px solid transparent',
+                        borderRight: '4px solid transparent',
+                        borderBottom: '4px solid rgba(0,0,0,0.95)'
+                    }}></div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const UserInfoSection = ({ user, userStats }) => {
     // Fallback if data is not yet loaded
     const stats = userStats || {
@@ -18,7 +105,7 @@ const UserInfoSection = ({ user, userStats }) => {
         totalSolved: 0,
         level: 1,
         levelTitle: 'Novice',
-        currentRank: 'Bronze',
+        currentTier: 'Bronze',
         daysToNextLevel: 30
     };
 
@@ -81,6 +168,7 @@ const UserInfoSection = ({ user, userStats }) => {
                             letterSpacing: '0.5px'
                         }}>
                             Lv. {userLevel} {levelTitle}
+                            <InfoTooltip type="level" />
                         </span>
                         <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)' }}></div>
                         <span style={{ color: '#94a3b8', fontSize: '1rem' }}>다음 레벨까지 {30 - streakDays}일 남음</span>
@@ -94,8 +182,11 @@ const UserInfoSection = ({ user, userStats }) => {
                     <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#fff' }}>{stats.totalSolved}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>현재 랭킹</div>
-                    <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#fbbf24' }}>{stats.currentRank}</div>
+                    <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>현재 티어</div>
+                    <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                        {stats.currentTier}
+                        <InfoTooltip type="tier" />
+                    </div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>연속 학습</div>
@@ -533,7 +624,7 @@ const DashboardPage = () => {
                     </div>
 
                     {/* 1. User Info (Top Row - Spans 2) */}
-                    <div style={{ gridColumn: '1 / -1', minHeight: '0' }}>
+                    <div style={{ gridColumn: '1 / -1', minHeight: '0', position: 'relative', zIndex: 10 }}>
                         <UserInfoSection user={user} userStats={dashboardData?.userStats} />
                     </div>
 
