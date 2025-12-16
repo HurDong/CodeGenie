@@ -386,10 +386,58 @@ int solution(int num1, int num2) {
     if (!tempProblemUrl) return;
     setIsFetching(true);
     try {
-      // Use api client instead of direct fetch
-      const data = await api.getProblemData(tempProblemUrl, tempPlatform);
-        
-      setTempProblemData(data);
+      // 1. URL Validation & Formatting
+      let targetUrl = tempProblemUrl;
+      if (/^\d+$/.test(targetUrl)) {
+          targetUrl = `https://www.acmicpc.net/problem/${targetUrl}`;
+      }
+
+      // 2. Fetch via Free CORS Proxy (CodeTabs)
+      // Note: This service may be unstable or block requests.
+      const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`;
+      const response = await fetch(proxyUrl);
+      
+      if (!response.ok) throw new Error('Proxy server error (400/500)');
+      
+      const htmlText = await response.text();
+      if (!htmlText || htmlText.trim().length === 0) throw new Error('Empty response from proxy');
+
+      // 3. Parse HTML
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlText, 'text/html');
+
+      // Helper to format text
+      const getFormattedText = (el) => {
+        if (!el) return "";
+        let text = el.innerText || el.textContent || "";
+        // Simple formatting preservation
+        text = text.replace(/\n\s*\n/g, '\n\n');
+        return text.trim();
+      };
+
+      const newData = {
+          title: doc.querySelector('#problem_title')?.textContent?.trim() || "",
+          description: getFormattedText(doc.querySelector('#problem_description')),
+          inputFormat: getFormattedText(doc.querySelector('#problem_input')),
+          outputFormat: getFormattedText(doc.querySelector('#problem_output')),
+          constraints: getFormattedText(doc.querySelector('#problem_limit')) || getFormattedText(doc.querySelector('#problem_hint')),
+          timeLimit: doc.querySelector('#problem-info td:nth-child(1)')?.textContent?.trim() || "",
+          memoryLimit: doc.querySelector('#problem-info td:nth-child(2)')?.textContent?.trim() || "",
+          examples: []
+      };
+
+      // Extract examples
+      const sampleInputs = doc.querySelectorAll("[id^=sample-input-]");
+      const sampleOutputs = doc.querySelectorAll("[id^=sample-output-]");
+      
+      for (let i = 0; i < sampleInputs.length; i++) {
+          newData.examples.push({
+              input: sampleInputs[i].textContent,
+              output: sampleOutputs[i] ? sampleOutputs[i].textContent : ""
+          });
+      }
+
+      setTempProblemData(newData);
         
       // Generate Code Template for Programmers
       if (tempPlatform === "programmers") {
