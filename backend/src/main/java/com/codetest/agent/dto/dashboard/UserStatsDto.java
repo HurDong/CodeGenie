@@ -9,7 +9,7 @@ public class UserStatsDto {
     private String name;
     private int streakDays;
     private int totalSolved;
-    private String currentRank; // e.g., "Gold I"
+    private String currentTier; // e.g., "Gold I"
     private int level; // 1-5
     private String levelTitle; // e.g., "Novice", "God of Genie"
     private int daysToNextLevel; // e.g., 18

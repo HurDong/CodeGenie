@@ -49,7 +49,8 @@ public class DashboardService {
                 .name(userName)
                 .streakDays(streakDays)
                 .totalSolved(totalSolved)
-                .currentRank(calculateRank(totalSolved))
+                .totalSolved(totalSolved)
+                .currentTier(calculateTier(totalSolved))
                 .level(level)
                 .levelTitle(getLevelTitle(level))
                 .daysToNextLevel(30 - streakDays > 0 ? 30 - streakDays : 0)
@@ -77,7 +78,8 @@ public class DashboardService {
                 .name(userName)
                 .streakDays(streakDays)
                 .totalSolved(totalSolved)
-                .currentRank("Gold I")
+                .totalSolved(totalSolved)
+                .currentTier("Gold I")
                 .level(level)
                 .levelTitle(getLevelTitle(level))
                 .daysToNextLevel(30 - streakDays)
@@ -141,7 +143,7 @@ public class DashboardService {
         return streak;
     }
 
-    private String calculateRank(int totalSolved) {
+    private String calculateTier(int totalSolved) {
         if (totalSolved >= 100)
             return "Diamond";
         if (totalSolved >= 50)
