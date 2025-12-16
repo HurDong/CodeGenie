@@ -6,7 +6,7 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing';
 
 
 // Mock Data
-const journeyData = [
+const defaultJourneyData = [
   { date: '2024-01-10', title: 'Start', desc: 'Hello World!', type: 'start' },
   { date: '2024-01-12', title: 'Variables', desc: '기초 다지기', type: 'learning' },
   { date: '2024-01-15', title: 'Conditionals', desc: 'if/else', type: 'learning' },
@@ -146,7 +146,7 @@ const NebulaNode = ({ position, data, isCurrent }) => {
                         whiteSpace: 'nowrap',
                         opacity: 0.9,
                     }}>
-                        {data.desc}
+                        {data.description || data.desc}
                     </div>
                 </div>
             </Html>
@@ -354,15 +354,19 @@ const CameraLogic = ({ activeIndex, points, controlsRef }) => {
     return null;
 };
 
-const AlgorithmSkillTree = () => {
+const AlgorithmSkillTree = ({ data }) => {
+    const journeyData = useMemo(() => data || defaultJourneyData, [data]);
     const [activeIndex, setActiveIndex] = useState(0); 
     const isAutoMoving = useRef(false); // Ref to track auto-movement state
     const cameraControlsRef = useRef();
 
-    const curve = useMemo(() => generateSmokePath(journeyData.length), []);
+    const curve = useMemo(() => generateSmokePath(Math.max(journeyData.length, 2)), [journeyData.length]);
     const points = useMemo(() => {
+        if (journeyData.length <= 1) {
+            return [curve.getPointAt(0)];
+        }
         return journeyData.map((_, i) => curve.getPointAt(i / (journeyData.length - 1)));
-    }, [curve]);
+    }, [curve, journeyData]);
 
     const handleNext = () => {
         setActiveIndex(prev => Math.min(prev + 1, journeyData.length - 1));

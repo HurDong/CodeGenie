@@ -11,38 +11,22 @@ import lampLevel3 from '../assets/badges/lamp_level_3.png';
 import lampLevel4 from '../assets/badges/lamp_level_4.png';
 import lampLevel5 from '../assets/badges/lamp_level_5.png';
 
-const UserInfoSection = ({ user }) => {
-    // TODO: Connect this to real user statistics (streak)
-    const streakDays = 12; // Example streak (Mock Data)
-    
-    // Level Calculation Logic based on Streak
-    // Level 1: 0~2 days
-    // Level 2: 3~6 days
-    // Level 3: 7~13 days
-    // Level 4: 14~29 days
-    // Level 5: 30+ days
-    const calculateLevel = (streak) => {
-        if (streak >= 30) return 5;
-        if (streak >= 14) return 4;
-        if (streak >= 7) return 3;
-        if (streak >= 3) return 2;
-        return 1;
+const UserInfoSection = ({ user, userStats }) => {
+    // Fallback if data is not yet loaded
+    const stats = userStats || {
+        streakDays: 0,
+        totalSolved: 0,
+        level: 1,
+        levelTitle: 'Novice',
+        currentRank: 'Bronze',
+        daysToNextLevel: 30
     };
 
-    const getLevelTitle = (level) => {
-        switch(level) {
-            case 5: return "God of Genie";
-            case 4: return "Grandmaster";
-            case 3: return "Sorcerer";
-            case 2: return "Apprentice";
-            default: return "Novice";
-        }
-    };
-
-    const userLevel = calculateLevel(streakDays);
+    const userLevel = stats.level;
     const badgeImages = [lampLevel1, lampLevel2, lampLevel3, lampLevel4, lampLevel5];
     const currentBadge = badgeImages[userLevel - 1] || lampLevel1;
-    const levelTitle = getLevelTitle(userLevel);
+    const levelTitle = stats.levelTitle;
+    const streakDays = stats.streakDays;
 
     return (
         <div style={{
@@ -107,15 +91,15 @@ const UserInfoSection = ({ user }) => {
             <div style={{ display: 'flex', gap: '4rem', marginRight: '3rem' }}>
                 <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>총 해결 문제</div>
-                    <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#fff' }}>142</div>
+                    <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#fff' }}>{stats.totalSolved}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>현재 랭킹</div>
-                    <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#fbbf24' }}>Gold I</div>
+                    <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#fbbf24' }}>{stats.currentRank}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>연속 학습</div>
-                    <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#f472b6' }}>{streakDays}일</div>
+                    <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#f472b6' }}>{stats.streakDays}일</div>
                 </div>
             </div>
         </div>
@@ -226,7 +210,7 @@ const CustomDropdown = ({ options, selectedValue, onChange }) => {
     );
 };
 
-const StreakCalendar = () => {
+const StreakCalendar = ({ activityLogs }) => {
     const currentYear = new Date().getFullYear();
     const [selectedYear, setSelectedYear] = React.useState(currentYear);
     const containerRef = React.useRef(null);
@@ -234,6 +218,14 @@ const StreakCalendar = () => {
 
     // 1. Generate Calendar Data for Selected Year
     const { daysData, monthLabels } = React.useMemo(() => {
+        // Transform activityLogs to Map for fast lookup
+        const logMap = new Map();
+        if (activityLogs) {
+            activityLogs.forEach(log => {
+                logMap.set(log.date, log.count);
+            });
+        }
+
         const data = [];
         const labels = [];
         
@@ -260,15 +252,8 @@ const StreakCalendar = () => {
             // If the day is before Jan 1 of selected year (padding), count is -1 (hidden)
             let count = -1;
             if (isWithinYear) {
-                // Mock data: Random activity
-                // Make today/future empty if in current year? Optional.
-                // For simplicity, just random data for the whole year range valid.
-                // (In a real app, you'd cap at Today if current year)
-                if (selectedYear === currentYear && currentDate > new Date()) {
-                    count = 0; // Future days empty
-                } else {
-                    count = Math.random() > 0.7 ? Math.floor(Math.random() * 5) : 0;
-                }
+                // Use real data from map
+                count = logMap.get(dateStr) !== undefined ? logMap.get(dateStr) : 0;
             }
 
             data.push({
@@ -472,6 +457,45 @@ const StreakCalendar = () => {
 
 const DashboardPage = () => {
     const { user } = useAuth();
+    const [dashboardData, setDashboardData] = React.useState(null);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const token = localStorage.getItem('accessToken');
+                // Use relative path '/api' which works with Vite proxy AND authService config style
+                // If authService uses 'https://code-genie.duckdns.org/api', we might need to match it.
+                // Assuming Vite proxy set up for /api -> http://localhost:8080 or backend.
+                const response = await fetch('/api/dashboard', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    setDashboardData(data);
+                } else {
+                    console.error("Failed to fetch dashboard data");
+                }
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
+
+    if (loading) {
+         return (
+            <div style={{ height: '100vh', width: '100vw', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                Loading...
+            </div>
+         );
+    }
 
     return (
         <div className="dashboard-page" style={{ height: '100vh', width: '100vw', overflow: 'hidden', position: 'relative' }}>
@@ -510,12 +534,12 @@ const DashboardPage = () => {
 
                     {/* 1. User Info (Top Row - Spans 2) */}
                     <div style={{ gridColumn: '1 / -1', minHeight: '0' }}>
-                        <UserInfoSection user={user} />
+                        <UserInfoSection user={user} userStats={dashboardData?.userStats} />
                     </div>
 
                     {/* 2. Streak Calendar (Bottom Left) */}
                     <div style={{ minHeight: '0' }}>
-                        <StreakCalendar />
+                        <StreakCalendar activityLogs={dashboardData?.activityLogs} />
                     </div>
 
                     {/* 3. Skill Tree (Bottom Right) */}
@@ -537,7 +561,7 @@ const DashboardPage = () => {
                                 <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#e2e8f0' }}> 🌳 Algorithm Tree</h2>
                             </div>
                             <div style={{ flex: 1, position: 'relative', width: '100%', minHeight: 0 }}>
-                                <AlgorithmSkillTree />
+                                <AlgorithmSkillTree data={dashboardData?.skillTree} />
                             </div>
                         </div>
                     </div>
