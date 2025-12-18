@@ -45,11 +45,13 @@ ChatGPT와 같은 일반적인 LLM과 달리, **CodeGenie**는 다음과 같은 
 - **Styling**: 💅 Vanilla CSS (Modern), ✨ GSAP & Framer Motion (Animations)
 - **Language**: 💛 JavaScript (ESNext)
 
-### ⚙️ Backend (Architecture Design)
-> *현재 리포지토리는 프론트엔드 중심이며, 백엔드는 아래와 같이 설계되었습니다.*
-- **Core**: ☕ Java, 🍃 Spring Boot 3
-- **Data Store**: 💾 Redis (Session & Context Management)
-- **Architecture**: 🤖 Stateless LLM, 🏛️ Server-Side State Management
+### ⚙️ Backend (Server & API)
+- **Language**: ☕ Java 17
+- **Framework**: 🍃 Spring Boot 3.2
+- **Database**: 🍃 MongoDB (Data Store), ⚡ Redis (Session & Cache)
+- **AI Integration**: 🤖 Spring AI (OpenAI API)
+- **Security**: 🔐 Spring Security, JWT, OAuth2 (Google)
+- **Build Tool**: 🐘 Gradle
 
 ---
 
@@ -96,7 +98,4 @@ npx cap sync
 npx cap open android
 ```
 
----
 
-## 📝 라이선스 (License)
-This project is for educational and development purposes. 📚
