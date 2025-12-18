@@ -9,36 +9,36 @@
 ```mermaid
 graph TD
     %% Nodes
-    User[👤 User]
+    User[👤 사용자]
     
-    subgraph Client [🎨 Frontend Client]
-        Web[🖥️ Web App React + Vite]
-        Mobile[📱 Mobile App Capacitor]
+    subgraph Client [🎨 프론트엔드 클라이언트]
+        Web[🖥️ 웹 앱 (React + Vite)]
+        Mobile[📱 모바일 앱 (Capacitor)]
     end
     
-    subgraph Server [⚙️ Backend Spring Boot]
-        API[🚪 API Gateway / Controller]
-        Service[🧠 Business Logic / Service Layer]
+    subgraph Server [⚙️ 백엔드 (Spring Boot)]
+        API[🚪 API 게이트웨이 / 컨트롤러]
+        Service[🧠 비즈니스 로직 / 서비스 계층]
         
-        subgraph Core_Services [Core Services]
-            ChatSvc[💬 Chat Service]
-            ProbSvc[🏗️ Problem Service]
-            DashboardSvc[📊 Dashboard Service]
-            AuthSvc[🔐 Auth Service]
+        subgraph Core_Services [핵심 서비스]
+            ChatSvc[💬 채팅 서비스]
+            ProbSvc[🏗️ 문제 서비스]
+            DashboardSvc[📊 대시보드 서비스]
+            AuthSvc[🔐 인증 서비스]
         end
         
-        Repo[💾 Repository Layer]
+        Repo[💾 리포지토리 계층]
     end
     
-    subgraph Infrastructure [🗄️ Infrastructure]
-        DB[(🛢️ RDBMS Oracle/MySQL)]
-        Redis[(⚡ Redis Session/Context)]
+    subgraph Infrastructure [🗄️ 인프라]
+        DB[(🛢️ RDBMS (Oracle/MySQL))]
+        Redis[(⚡ Redis (Session/Context))]
     end
     
-    subgraph External [🌍 External Services]
-        OpenAI[🤖 OpenAI API LLM]
-        Baekjoon[algo Baekjoon]
-        Programmers[algo Programmers]
+    subgraph External [🌍 외부 서비스]
+        OpenAI[🤖 OpenAI API (LLM)]
+        Baekjoon[algo 백준]
+        Programmers[algo 프로그래머스]
     end
 
     %% Edge connections
@@ -54,9 +54,9 @@ graph TD
     Service --> DashboardSvc
     Service --> AuthSvc
     
-    ChatSvc -- Prompt Construction --> OpenAI
-    ProbSvc -- Crawling/Parsing --> Baekjoon
-    ProbSvc -- Crawling/Parsing --> Programmers
+    ChatSvc -- 프롬프트 생성 --> OpenAI
+    ProbSvc -- 크롤링/파싱 --> Baekjoon
+    ProbSvc -- 크롤링/파싱 --> Programmers
     
     ChatSvc --> Redis
     Service --> Repo --> DB
