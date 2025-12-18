@@ -16,7 +16,7 @@ graph TD
         Mobile["📱 모바일 앱 (Capacitor)"]
     end
     
-    subgraph Server [⚙️ 백엔드 (Spring Boot)]
+    subgraph Server [⚙️ 백엔드 Spring Boot]
         API["🚪 API 게이트웨이 / 컨트롤러"]
         Service["🧠 비즈니스 로직 / 서비스 계층"]
         
