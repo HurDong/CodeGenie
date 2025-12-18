@@ -60,17 +60,6 @@ graph TD
     
     ChatSvc --> Redis
     Service --> Repo --> DB
-    
-    %% Styling
-    classDef client fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
-    classDef server fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
-    classDef infra fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
-    classDef ext fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
-    
-    class Client,Web,Mobile client;
-    class Server,API,Service,Core_Services,Repo server;
-    class Infrastructure,DB,Redis infra;
-    class External,OpenAI,Baekjoon,Programmers ext;
 ```
 
 ---
