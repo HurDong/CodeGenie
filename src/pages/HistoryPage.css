@@ -1,0 +1,224 @@
+/* HistoryPage.css */
+
+.history-page {
+    min-height: 100vh;
+    width: 100%;
+    position: relative;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+}
+
+.history-container {
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    padding: 1.5rem 2rem;
+    padding-top: 40px;
+    padding-bottom: 60px;
+    max-width: 1600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.history-header {
+    margin-bottom: 1.5rem;
+}
+
+.history-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.history-header p {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.history-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Cards */
+.history-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border-radius: 1.5rem;
+    border: 1px solid var(--card-border);
+    box-shadow: var(--card-shadow);
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+/* Stats Section */
+.history-stats-card {
+    padding: 2rem 3rem;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    align-items: center;
+}
+
+.history-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--stat-item-bg);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    border: 1px solid var(--glass-border);
+}
+
+.history-stat-label {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.history-stat-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+.history-stat-sub {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+/* Controls Section */
+.history-controls-card {
+    padding: 1.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.search-input {
+    width: 100%;
+    padding: 16px 20px;
+    border-radius: 12px;
+    background: var(--input-bg-alt); 
+    border: 1px solid var(--card-border);
+    color: var(--text-primary);
+    font-size: 1rem;
+    box-sizing: border-box;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.search-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.filter-tab {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid transparent; /* Default transparent border */
+    background: var(--btn-bg-inactive);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    font-weight: 400;
+}
+
+.filter-tab:hover {
+    background: var(--btn-hover-bg);
+    color: var(--text-primary);
+}
+
+.filter-tab.active {
+    font-weight: 600;
+    /* Active colors are set inline dynamically or via specific classes if needed, 
+       but inline style used in JSX handles the specific category colors. 
+       We will keep the base structure here. */
+}
+
+/* Conversations Table */
+.history-table-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 400px;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    padding: 24px 32px;
+    background: var(--glass-bg); /* Or slightly darker */
+    border-bottom: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    align-items: center;
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--card-border);
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+}
+
+.table-row:last-child {
+    border-bottom: none;
+}
+
+.table-row:hover {
+    background: var(--btn-hover-bg);
+}
+
+.col-title .title-main {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 1.05rem;
+    margin-bottom: 6px;
+}
+
+.col-title .topic {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.col-date {
+    text-align: right;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.empty-state {
+    padding: 80px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.bg-grid {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+}
