@@ -4,6 +4,7 @@ import AlgorithmSkillTree from '../components/AlgorithmSkillTree';
 import { useAuth } from '../context/AuthContext';
 import AuroraBackground from '../components/ui/AuroraBackground';
 import '../index.css';
+import './DashboardPage.css';
 
 import lampLevel1 from '../assets/badges/lamp_level_1.png';
 import lampLevel2 from '../assets/badges/lamp_level_2.png';
@@ -17,23 +18,23 @@ const InfoTooltip = ({ type }) => {
     const content = type === 'tier' ? (
         <div style={{ minWidth: '200px' }}>
             <div style={{ color: '#fbbf24', fontWeight: '700', marginBottom: '6px', fontSize: '0.9rem' }}>🏆 티어 (Total Solved)</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '4px 12px', fontSize: '0.8rem', color: '#94a3b8' }}>
-                <span>Diamond</span> <span style={{ color: '#e2e8f0' }}>100+ 문제</span>
-                <span>Platinum</span> <span style={{ color: '#e2e8f0' }}>50+ 문제</span>
-                <span>Gold</span> <span style={{ color: '#e2e8f0' }}>20+ 문제</span>
-                <span>Silver</span> <span style={{ color: '#e2e8f0' }}>10+ 문제</span>
-                <span>Bronze</span> <span style={{ color: '#e2e8f0' }}>기본</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '4px 12px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                <span>Diamond</span> <span style={{ color: 'var(--text-primary)' }}>100+ 문제</span>
+                <span>Platinum</span> <span style={{ color: 'var(--text-primary)' }}>50+ 문제</span>
+                <span>Gold</span> <span style={{ color: 'var(--text-primary)' }}>20+ 문제</span>
+                <span>Silver</span> <span style={{ color: 'var(--text-primary)' }}>10+ 문제</span>
+                <span>Bronze</span> <span style={{ color: 'var(--text-primary)' }}>기본</span>
             </div>
         </div>
     ) : (
         <div style={{ minWidth: '220px' }}>
             <div style={{ color: '#f472b6', fontWeight: '700', marginBottom: '6px', fontSize: '0.9rem' }}>⚡ 레벨 (Streak)</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '4px 12px', fontSize: '0.8rem', color: '#94a3b8' }}>
-                <span>God of Genie</span> <span style={{ color: '#e2e8f0' }}>30일 연속</span>
-                <span>Grandmaster</span> <span style={{ color: '#e2e8f0' }}>14일 연속</span>
-                <span>Sorcerer</span> <span style={{ color: '#e2e8f0' }}>7일 연속</span>
-                <span>Apprentice</span> <span style={{ color: '#e2e8f0' }}>3일 연속</span>
-                <span>Novice</span> <span style={{ color: '#e2e8f0' }}>기본</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '4px 12px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                <span>God of Genie</span> <span style={{ color: 'var(--text-primary)' }}>30일 연속</span>
+                <span>Grandmaster</span> <span style={{ color: 'var(--text-primary)' }}>14일 연속</span>
+                <span>Sorcerer</span> <span style={{ color: 'var(--text-primary)' }}>7일 연속</span>
+                <span>Apprentice</span> <span style={{ color: 'var(--text-primary)' }}>3일 연속</span>
+                <span>Novice</span> <span style={{ color: 'var(--text-primary)' }}>기본</span>
             </div>
         </div>
     );
@@ -48,15 +49,16 @@ const InfoTooltip = ({ type }) => {
                 width: '16px',
                 height: '16px',
                 borderRadius: '50%',
-                border: '1px solid rgba(148, 163, 184, 0.4)',
-                color: '#94a3b8',
+                border: '1px solid var(--text-secondary)',
+                color: 'var(--text-secondary)',
                 fontSize: '0.7rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'help',
                 transition: 'all 0.2s',
-                marginTop: '-1px'
+                marginTop: '-1px',
+                opacity: 0.7
             }}>
                 ?
             </div>
@@ -66,16 +68,16 @@ const InfoTooltip = ({ type }) => {
                     top: '24px',
                     left: '50%',
                     transform: 'translateX(-50%)',
-                    background: 'rgba(15, 23, 42, 0.95)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    background: 'var(--glass-bg)',
+                    border: '1px solid var(--glass-border)',
                     backdropFilter: 'blur(12px)',
                     padding: '12px 16px',
                     borderRadius: '12px',
                     width: 'max-content',
-                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+                    boxShadow: 'var(--shadow-soft)',
                     fontSize: '0.85rem',
                     lineHeight: '1.5',
-                    color: '#e2e8f0',
+                    color: 'var(--text-primary)',
                     pointerEvents: 'none',
                     textAlign: 'left'
                 }}>
@@ -90,7 +92,7 @@ const InfoTooltip = ({ type }) => {
                         height: 0,
                         borderLeft: '4px solid transparent',
                         borderRight: '4px solid transparent',
-                        borderBottom: '4px solid rgba(0,0,0,0.95)'
+                        borderBottom: '4px solid var(--glass-border)'
                     }}></div>
                 </div>
             )}
@@ -116,81 +118,50 @@ const UserInfoSection = ({ user, userStats }) => {
     const streakDays = stats.streakDays;
 
     return (
-        <div style={{
-            background: 'rgba(30, 41, 59, 0.6)',
-            backdropFilter: 'blur(12px)',
-            borderRadius: '1.5rem',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '1.2rem 3rem', // Reduced vertical padding, increased horizontal
-            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            height: '100%'
-        }}>
+        <div className="dashboard-card user-info-card">
             <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
-                {/* 뱃지 이미지가 아바타 대체 */}
-                <div style={{
-                    width: '150px', 
-                    height: '150px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    filter: 'drop-shadow(0 0 25px rgba(99, 102, 241, 0.6))',
-                    borderRadius: '50%',
-                    overflow: 'hidden', // Circle crop
-                    border: '4px solid rgba(255, 255, 255, 0.1)' // Optional ring for better definition
-                }}>
+                <div className="user-avatar-container">
                     <img 
                         src={currentBadge} 
                         alt={`Level ${userLevel} Badge`} 
                         style={{ 
                             width: '100%', 
                             height: '100%', 
-                            objectFit: 'cover' // Fill the circle
+                            objectFit: 'cover' 
                         }} 
                     />
                 </div>
                 
                 <div>
-                    <h2 style={{ fontSize: '2.5rem', fontWeight: '800', color: '#f8fafc', marginBottom: '0.8rem', letterSpacing: '-0.5px' }}>
+                    <h2 className="user-name">
                         {user?.name || 'Developer'}
                     </h2>
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <span style={{ 
-                            padding: '6px 16px', 
-                            background: 'rgba(56, 189, 248, 0.1)', 
-                            color: '#38bdf8', 
-                            borderRadius: '20px', 
-                            fontSize: '1rem', 
-                            border: '1px solid rgba(56, 189, 248, 0.2)',
-                            fontWeight: '600',
-                            letterSpacing: '0.5px'
-                        }}>
+                        <span className="user-level-badge">
                             Lv. {userLevel} {levelTitle}
                             <InfoTooltip type="level" />
                         </span>
-                        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)' }}></div>
-                        <span style={{ color: '#94a3b8', fontSize: '1rem' }}>다음 레벨까지 {30 - streakDays}일 남음</span>
+                        <div style={{ width: '1px', height: '20px', background: 'var(--card-border)' }}></div>
+                        <span className="user-next-level">다음 레벨까지 {30 - streakDays}일 남음</span>
                     </div>
                 </div>
             </div>
 
             <div style={{ display: 'flex', gap: '4rem', marginRight: '3rem' }}>
-                <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>총 해결 문제</div>
-                    <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#fff' }}>{stats.totalSolved}</div>
+                <div className="stat-item">
+                    <div className="stat-label">총 해결 문제</div>
+                    <div className="stat-value">{stats.totalSolved}</div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>현재 티어</div>
-                    <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                <div className="stat-item">
+                    <div className="stat-label">현재 티어</div>
+                    <div className="stat-value tier">
                         {stats.currentTier}
                         <InfoTooltip type="tier" />
                     </div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '1rem', color: '#94a3b8', marginBottom: '0.5rem' }}>연속 학습</div>
-                    <div style={{ fontSize: '2.2rem', fontWeight: '700', color: '#f472b6' }}>{stats.streakDays}일</div>
+                <div className="stat-item">
+                    <div className="stat-label">연속 학습</div>
+                    <div className="stat-value streak">{stats.streakDays}일</div>
                 </div>
             </div>
         </div>
@@ -218,22 +189,9 @@ const CustomDropdown = ({ options, selectedValue, onChange }) => {
         <div ref={dropdownRef} style={{ position: 'relative', minWidth: '100px', fontFamily: '"Inter", sans-serif' }}>
             <div 
                 onClick={() => setIsOpen(!isOpen)}
+                className="custom-dropdown-trigger"
                 style={{
-                    background: 'rgba(30, 41, 59, 0.4)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '12px',
-                    padding: '8px 16px',
-                    color: '#e2e8f0',
-                    fontSize: '0.9rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '8px',
-                    transition: 'all 0.2s ease',
-                    boxShadow: isOpen ? '0 0 0 2px rgba(99, 102, 241, 0.5)' : 'none',
-                    backdropFilter: 'blur(8px)'
+                    boxShadow: isOpen ? '0 0 0 2px rgba(99, 102, 241, 0.5)' : 'none'
                 }}
             >
                 <span>{selectedLabel}</span>
@@ -247,27 +205,11 @@ const CustomDropdown = ({ options, selectedValue, onChange }) => {
             </div>
 
             {/* Dropdown Menu */}
-            <div style={{
-                position: 'absolute',
-                top: 'calc(100% + 8px)',
-                right: 0,
-                width: '100%',
-                minWidth: '120px',
-                background: 'rgba(15, 23, 42, 0.95)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                padding: '4px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '2px',
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
-                backdropFilter: 'blur(12px)',
+            <div className="custom-dropdown-menu" style={{
                 opacity: isOpen ? 1 : 0,
                 transform: isOpen ? 'translateY(0) scale(1)' : 'translateY(-10px) scale(0.95)',
                 pointerEvents: isOpen ? 'auto' : 'none',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                zIndex: 50,
-                overflow: 'hidden'
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
             }}>
                 {options.map((option) => (
                     <div
@@ -276,22 +218,7 @@ const CustomDropdown = ({ options, selectedValue, onChange }) => {
                             onChange(option.value);
                             setIsOpen(false);
                         }}
-                        style={{
-                            padding: '8px 12px',
-                            borderRadius: '8px',
-                            color: selectedValue === option.value ? '#a5b4fc' : '#cbd5e1',
-                            fontSize: '0.9rem',
-                            cursor: 'pointer',
-                            background: selectedValue === option.value ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-                            transition: 'all 0.15s ease',
-                            fontWeight: selectedValue === option.value ? '600' : '400',
-                        }}
-                        onMouseEnter={(e) => {
-                            if (selectedValue !== option.value) e.target.style.background = 'rgba(255, 255, 255, 0.05)';
-                        }}
-                        onMouseLeave={(e) => {
-                            if (selectedValue !== option.value) e.target.style.background = 'transparent';
-                        }}
+                        className={`dropdown-option ${selectedValue === option.value ? 'selected' : ''}`}
                     >
                         {option.label}
                     </div>
@@ -387,7 +314,7 @@ const StreakCalendar = ({ activityLogs }) => {
 
     const getLevelColor = (count) => {
         if (count === -1) return 'transparent'; // Padding days
-        if (count === 0) return 'rgba(255, 255, 255, 0.05)'; // Empty
+        if (count === 0) return 'var(--calendar-empty)'; // Empty
         if (count <= 1) return '#312e81'; // Level 1 (Deep Indigo)
         if (count <= 2) return '#4f46e5'; // Level 2 (Indigo)
         if (count <= 3) return '#8b5cf6'; // Level 3 (Violet)
@@ -401,22 +328,11 @@ const StreakCalendar = ({ activityLogs }) => {
     ];
 
     return (
-        <div ref={containerRef} style={{
-            background: 'rgba(15, 23, 42, 0.6)',
-            backdropFilter: 'blur(12px)',
-            borderRadius: '1.5rem',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '1.5rem',
-            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.2)',
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            position: 'relative' 
-        }}>
+        <div ref={containerRef} className="dashboard-card streak-card" style={{ position: 'relative' }}>
            
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+            <div className="streak-header">
+                <h3 className="streak-title">
                     <span style={{ fontSize: '1.4rem' }}>🌱</span> 스트릭 (Streak)
                 </h3>
                 
@@ -429,27 +345,11 @@ const StreakCalendar = ({ activityLogs }) => {
             </div>
             
             {/* Calendar Grid Container */}
-            <div ref={scrollRef} style={{ 
-                flex: 1, 
-                display: 'flex', 
-                flexDirection: 'column',
-                justifyContent: 'center',
-                overflowX: 'auto',
-                overflowY: 'hidden',
-                paddingBottom: '10px',
-                position: 'relative', 
-                scrollBehavior: 'smooth'
-            }}>
+            <div ref={scrollRef} className="streak-grid-container">
                 {/* Labels Layer */}
                 <div style={{ position: 'relative', height: '14px', marginBottom: '4px', width: 'max-content' }}>
                     {monthLabels.map((label, i) => (
-                        <div key={i} style={{
-                            position: 'absolute',
-                            left: `${label.colIndex * 14}px`, 
-                            fontSize: '0.75rem',
-                            color: '#94a3b8',
-                            whiteSpace: 'nowrap'
-                        }}>
+                        <div key={i} className="month-label" style={{ left: `${label.colIndex * 14}px` }}>
                             {label.text}
                         </div>
                     ))}
@@ -467,14 +367,11 @@ const StreakCalendar = ({ activityLogs }) => {
                     {daysData.map((day, index) => (
                         <div 
                             key={index} 
+                            className="calendar-day"
                             style={{
-                                width: '10px',
-                                height: '10px',
                                 background: getLevelColor(day.count),
-                                borderRadius: '2px',
                                 cursor: day.isVisible ? 'pointer' : 'default',
                                 opacity: day.isVisible ? 1 : 0, // Truly hide padding days
-                                transition: 'all 0.1s'
                             }}
                             onMouseEnter={(e) => {
                                 if (!containerRef.current || !day.isVisible) return;
@@ -502,18 +399,19 @@ const StreakCalendar = ({ activityLogs }) => {
                     top: tooltip.y,
                     left: tooltip.x,
                     transform: 'translate(-50%, -100%)',
-                    background: 'rgba(0,0,0,0.95)',
+                    background: 'var(--glass-bg)',
                     padding: '8px 12px',
                     borderRadius: '8px',
-                    color: 'white',
+                    color: 'var(--text-color)',
                     fontSize: '0.8rem',
                     pointerEvents: 'none',
                     zIndex: 20, 
                     whiteSpace: 'nowrap',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
-                    border: '1px solid rgba(255,255,255,0.1)'
+                    boxShadow: 'var(--shadow-soft)',
+                    border: '1px solid var(--glass-border)',
+                    backdropFilter: 'blur(8px)'
                 }}>
-                    <div style={{ color: '#cbd5e1', fontSize: '0.75rem', marginBottom: '2px' }}>{tooltip.date}</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginBottom: '2px' }}>{tooltip.date}</div>
                     <div style={{ fontWeight: 'bold' }}>
                         {tooltip.count > 0 ? `🚀 ${tooltip.count}개의 챌린지 완료` : '💤 활동 없음'}
                     </div>
@@ -527,15 +425,15 @@ const StreakCalendar = ({ activityLogs }) => {
                         height: 0,
                         borderLeft: '4px solid transparent',
                         borderRight: '4px solid transparent',
-                        borderTop: '4px solid rgba(0,0,0,0.95)'
+                        borderTop: '4px solid var(--glass-bg)' // Need to match bg
                     }}></div>
                 </div>
             )}
             
             {/* Legend */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: '#64748b', marginTop: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 'auto' }}>
                 <span>Less</span>
-                <div style={{ width: '10px', height: '10px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '2px' }}></div>
+                <div style={{ width: '10px', height: '10px', background: 'var(--calendar-empty)', borderRadius: '2px' }}></div>
                 <div style={{ width: '10px', height: '10px', background: '#312e81', borderRadius: '2px' }}></div>
                 <div style={{ width: '10px', height: '10px', background: '#4f46e5', borderRadius: '2px' }}></div>
                 <div style={{ width: '10px', height: '10px', background: '#8b5cf6', borderRadius: '2px' }}></div>
@@ -555,9 +453,6 @@ const DashboardPage = () => {
         const fetchDashboardData = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                // Use relative path '/api' which works with Vite proxy AND authService config style
-                // If authService uses 'https://code-genie.duckdns.org/api', we might need to match it.
-                // Assuming Vite proxy set up for /api -> http://localhost:8080 or backend.
                 const response = await fetch('/api/dashboard', {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -582,45 +477,32 @@ const DashboardPage = () => {
 
     if (loading) {
          return (
-            <div style={{ height: '100vh', width: '100vw', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+            <div className="dashboard-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 Loading...
             </div>
          );
     }
 
     return (
-        <div className="dashboard-page" style={{ height: '100vh', width: '100vw', overflow: 'hidden', position: 'relative' }}>
+        <div className="dashboard-page">
             <Navbar />
             <AuroraBackground>
                 {/* Background Grid */}
                 <div style={{
                     position: 'absolute',
                     top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)',
+                    backgroundImage: 'linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px)',
                     backgroundSize: '40px 40px',
                     pointerEvents: 'none',
                     zIndex: 0
                 }} />
 
-                <div className="dashboard-layout" style={{ 
-                    maxWidth: '1600px', // Wider layout
-                    margin: '0 auto', 
-                    padding: '1.5rem 2rem', 
-                    paddingTop: '40px', // Matched with HistoryPage
-                    height: '100%',
-                    display: 'grid',
-                    gridTemplateRows: 'auto 260px minmax(0, 1fr)', // Added auto row for header
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '1.5rem',
-                    position: 'relative',
-                    zIndex: 1,
-                    boxSizing: 'border-box'
-                }}>
+                <div className="dashboard-layout">
                     
                     {/* 0. Header (New) */}
                     <div style={{ gridColumn: '1 / -1', marginBottom: '1rem' }}>
-                        <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#e2e8f0', marginBottom: '0.5rem' }}>대시보드</h1>
-                        <p style={{ fontSize: '1rem', color: '#94a3b8' }}>나의 학습 현황과 성장을 한눈에 확인하세요</p>
+                        <h1 className="dashboard-header-title">대시보드</h1>
+                        <p className="dashboard-header-desc">나의 학습 현황과 성장을 한눈에 확인하세요</p>
                     </div>
 
                     {/* 1. User Info (Top Row - Spans 2) */}
@@ -635,21 +517,9 @@ const DashboardPage = () => {
 
                     {/* 3. Skill Tree (Bottom Right) */}
                     <div style={{ minHeight: '0' }}>
-                        <div style={{
-                            background: 'rgba(15, 23, 42, 0.6)',
-                            backdropFilter: 'blur(12px)',
-                            borderRadius: '1.5rem',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            padding: '1.5rem',
-                            boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.2)',
-                            height: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            overflow: 'hidden',
-                            position: 'relative'
-                        }}>
+                        <div className="dashboard-card skill-tree-card">
                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexShrink: 0 }}>
-                                <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#e2e8f0' }}> 🌳 Algorithm Tree</h2>
+                                <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)' }}> 🌳 Algorithm Tree</h2>
                             </div>
                             <div style={{ flex: 1, position: 'relative', width: '100%', minHeight: 0 }}>
                                 <AlgorithmSkillTree data={dashboardData?.skillTree} />
@@ -664,3 +534,4 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+

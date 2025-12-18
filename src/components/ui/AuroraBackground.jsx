@@ -5,7 +5,7 @@ const COLORS = ["#13FFAA", "#1E67C6", "#CE84CF", "#DD335C"];
 
 export const AuroraBackground = ({ children, className = "", ...props }) => {
     const color = useMotionValue(COLORS[0]);
-    const backgroundImage = useMotionTemplate`radial-gradient(125% 125% at 50% 0%, #020617 50%, ${color})`;
+    const backgroundImage = useMotionTemplate`radial-gradient(125% 125% at 50% 0%, var(--bg-color) 50%, ${color})`;
 
     useEffect(() => {
         animate(color, COLORS, {
