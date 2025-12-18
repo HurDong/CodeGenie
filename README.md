@@ -46,6 +46,7 @@ ChatGPT와 같은 일반적인 LLM과 달리, **CodeGenie**는 다음과 같은 
 - **Build Tool**: ⚡ Vite
 - **Mobile**: 📱 Capacitor (Android Support)
 - **Styling**: 💅 Vanilla CSS (Modern), ✨ GSAP & Framer Motion (Animations)
+- **Visualization**: 🌌 Three.js, React Three Fiber, React Force Graph
 - **Language**: 💛 JavaScript (ESNext)
 
 ### ⚙️ Backend (Server & API)
