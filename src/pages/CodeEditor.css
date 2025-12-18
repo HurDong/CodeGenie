@@ -3,15 +3,15 @@
   border: 1px solid #334155;
   border-radius: 8px;
   overflow: hidden;
-  background-color: #0f172a;
+  background-color: var(--code-editor-bg);
   min-height: 300px;
 }
 
 .code-editor {
   font-family: "Fira Code", "Fira Mono", monospace;
   font-size: 14px;
-  background-color: #0f172a;
-  color: #e2e8f0;
+  background-color: var(--code-editor-bg);
+  color: var(--code-editor-text);
   min-height: 300px;
 }
 
@@ -50,8 +50,8 @@
 
 /* Terminal Output */
 .terminal-output {
-  background-color: #1e1e1e;
-  border: 1px solid #333;
+  background-color: var(--terminal-bg);
+  border: 1px solid var(--glass-border);
   border-radius: 8px;
   overflow: hidden;
   display: flex;
@@ -62,11 +62,11 @@
 }
 
 .terminal-header {
-  background-color: #2d2d2d;
+  background-color: var(--terminal-header-bg);
   padding: 8px 12px;
   font-size: 0.8rem;
-  color: #9ca3af;
-  border-bottom: 1px solid #333;
+  color: var(--terminal-text);
+  border-bottom: 1px solid var(--glass-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -377,11 +377,11 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(30, 41, 59, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   padding: 10px 16px;
   border-radius: 12px;
-  color: #cbd5e1;
+  color: var(--text-muted);
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
@@ -392,10 +392,10 @@
 }
 
 .ide-btn:hover {
-  background: rgba(30, 41, 59, 0.8);
-  border-color: rgba(148, 163, 184, 0.4);
+  background: var(--glass-bg);
+  border-color: var(--text-muted);
   transform: translateY(-2px);
-  color: #f1f5f9;
+  color: var(--text-color);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -597,8 +597,8 @@
 }
 
 .ide-btn.active .status-dot {
-  background-color: #3b82f6;
-  box-shadow: 0 0 8px #3b82f6;
+  background-color: var(--accent-color);
+  box-shadow: 0 0 8px var(--accent-color);
 }
 
 /* Neon Run Button (Emerald/Teal - Execution) */
@@ -660,9 +660,9 @@
 
 /* Neon Cancel Button (Glass/Subtle) */
 .neon-cancel-btn {
-  background: rgba(255, 255, 255, 0.05);
-  color: #94a3b8;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05); /* Keep subtle */
+  color: var(--text-muted);
+  border: 1px solid var(--glass-border);
   padding: 10px 24px;
   border-radius: 12px;
   font-weight: 600;
@@ -673,8 +673,144 @@
 }
 
 .neon-cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #f1f5f9;
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--glass-border);
+  color: var(--text-color);
+  border-color: var(--text-muted);
   transform: translateY(-1px);
+}
+
+/* Test Case Styles */
+.test-cases-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.test-case-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr 30px;
+  gap: 1rem;
+  align-items: start;
+  background: var(--input-bg-alt);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+}
+
+.test-case-label {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.test-case-textarea {
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  min-height: 60px;
+  resize: vertical;
+  width: 100%;
+  background: var(--code-editor-bg);
+  color: var(--code-editor-text);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+
+.test-case-textarea:focus {
+  border-color: var(--accent-color);
+}
+
+/* Language Selector Styles */
+.lang-select-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: var(--btn-bg-inactive);
+  border: 1px solid var(--btn-border-inactive);
+  border-radius: 8px;
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.lang-select-btn:hover {
+  background-color: var(--btn-hover-bg);
+  border-color: #94a3b8;
+}
+
+.lang-select-btn.active {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  border-color: var(--accent-color);
+}
+
+.lang-selected {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lang-name {
+  font-weight: 500;
+  font-family: "Fira Code", monospace;
+}
+
+.lang-arrow {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.lang-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  z-index: 100;
+}
+
+.lang-option {
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  background-color: transparent;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.lang-option:hover {
+  background-color: var(--btn-hover-bg);
+  color: var(--text-color);
+}
+
+.lang-option.selected {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #3b82f6; /* Keep blue for selection */
+  border-left: 3px solid #3b82f6;
+}
+
+.lang-check {
+  margin-left: auto;
+  font-size: 0.8rem;
 }

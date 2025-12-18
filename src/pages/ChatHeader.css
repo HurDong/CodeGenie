@@ -8,10 +8,10 @@
   justify-content: space-between;
   padding: 20px 32px;
   min-height: 84px;
-  /* Deep Cosmic Gradient (Reversed) */
-  background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+  /* Deep Cosmic Gradient (Reversed) - Adapted for Theme */
+  background: var(--nav-bg);
   /* Neon Glow Border */
-  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+  border-bottom: 1px solid var(--nav-border);
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 15px -3px rgba(59, 130, 246, 0.15);
   margin: 0;
   width: 100%;
@@ -69,8 +69,8 @@
   left: 0;
   z-index: 2000; /* Ensure it is above the overlay */
   min-width: 180px;
-  background: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: 12px;
   padding: 6px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -92,7 +92,7 @@
   padding: 10px 12px;
   border-radius: 8px;
   background: transparent;
-  color: #cbd5e1;
+  color: var(--text-color);
   border: none;
   cursor: pointer;
   font-size: 0.85rem;
@@ -102,13 +102,13 @@
 }
 
 .dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  background: var(--glass-border);
+  color: var(--text-color);
 }
 
 .dropdown-item.active {
   background: rgba(99, 102, 241, 0.1); /* Indigo tint */
-  color: #fff;
+  color: var(--accent-color);
   font-weight: 600;
 }
 
@@ -126,7 +126,7 @@
   border: none;
   font-size: 1.15rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text-color);
   width: 350px;
   text-overflow: ellipsis;
   cursor: pointer;
@@ -139,7 +139,7 @@
 }
 
 .chat-title-display:hover {
-  background: rgba(255,255,255,0.05);
+  background: var(--glass-border);
 }
 
 .edit-hint-icon {

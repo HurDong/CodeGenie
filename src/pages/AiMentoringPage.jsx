@@ -985,17 +985,13 @@ int solution(int num1, int num2) {
                       className={`sub-mode-btn ${activeMode === subMode.id ? "active" : ""}`}
                       onClick={() => handleModeChange(subMode.id)}
                       style={{
-                        padding: '6px 12px',
-                        borderRadius: '16px',
-                        border: activeMode === subMode.id ? `1px solid ${currentParentMode.color}` : '1px solid #334155',
-                        background: activeMode === subMode.id ? `${currentParentMode.color}1a` : 'rgba(30, 41, 59, 0.5)',
-                        color: activeMode === subMode.id ? currentParentMode.color : '#94a3b8',
-                        fontSize: '0.85rem',
-                        cursor: 'pointer',
-                        transition: 'border-color 0.2s, background-color 0.2s',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
+                        "--category-color": currentParentMode.color,
+                         // Only set color variables if active, otherwise let CSS handle default
+                         ...(activeMode === subMode.id ? {
+                           borderColor: currentParentMode.color,
+                           backgroundColor: `${currentParentMode.color}1a`,
+                           color: currentParentMode.color
+                         } : {})
                       }}
                       title={subMode.description}
                     >
@@ -1530,11 +1526,11 @@ int solution(int num1, int num2) {
                             + 케이스 추가
                           </button>
                         </div>
-                        <div className="test-cases-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '250px', overflowY: 'auto', paddingRight: '5px' }}>
+                        <div className="test-cases-list">
                           {testCases.map((tc, idx) => (
-                            <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 30px', gap: '1rem', alignItems: 'start', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid #333' }}>
+                            <div key={idx} className="test-case-card">
                               <div>
-                                <label style={{ display: 'block', color: '#64748b', fontSize: '0.8rem', marginBottom: '4px' }}>입력 (Input)</label>
+                                <label className="test-case-label">입력 (Input)</label>
                                 <textarea
                                   value={tc.input}
                                   onChange={(e) => {
@@ -1542,13 +1538,12 @@ int solution(int num1, int num2) {
                                     newCases[idx].input = e.target.value;
                                     setTestCases(newCases);
                                   }}
-                                  className="modal-textarea"
+                                  className="test-case-textarea"
                                   rows="2"
-                                  style={{ fontSize: '0.9rem', padding: '0.5rem', minHeight: '60px', resize: 'vertical', width: '100%', background: '#0f172a' }}
                                 />
                               </div>
                               <div>
-                                <label style={{ display: 'block', color: '#64748b', fontSize: '0.8rem', marginBottom: '4px' }}>예상 출력 (Expected Output)</label>
+                                <label className="test-case-label">예상 출력 (Expected Output)</label>
                                 <textarea
                                   value={tc.expectedOutput}
                                   onChange={(e) => {
@@ -1556,9 +1551,8 @@ int solution(int num1, int num2) {
                                     newCases[idx].expectedOutput = e.target.value;
                                     setTestCases(newCases);
                                   }}
-                                  className="modal-textarea"
+                                  className="test-case-textarea"
                                   rows="2"
-                                  style={{ fontSize: '0.9rem', padding: '0.5rem', minHeight: '60px', resize: 'vertical', width: '100%', background: '#0f172a' }}
                                 />
                               </div>
                               {tc.isUserDefined ? (
@@ -1583,11 +1577,11 @@ int solution(int num1, int num2) {
                     ) : (
                       /* Execution Result Tab */
                       <div className="terminal-output" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                        <div className="terminal-header" style={{ marginBottom: '1rem' }}>
-                          <span style={{ fontSize: '1rem', fontWeight: '600', color: '#e2e8f0' }}>
+                        <div className="terminal-header">
+                          <span style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--terminal-text)' }}>
                             {executionResult.testResults ? "테스트 결과 리포트" : "콘솔 출력"}
                           </span>
-                          <span className="execution-time" style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
+                          <span className="execution-time">
                             ⏱ 소요 시간: {executionResult.executionTimeMs}ms
                           </span>
                         </div>

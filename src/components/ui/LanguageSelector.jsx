@@ -28,33 +28,19 @@ const LanguageSelector = ({ currentLanguage, onLanguageChange }) => {
   return (
     <div className="language-selector-container" ref={containerRef} style={{ position: 'relative', width: '140px', zIndex: 50 }}>
       <motion.button
-        whileHover={{ scale: 1.02, borderColor: '#4b5563' }}
+        whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '8px 12px',
-          backgroundColor: '#1e1e1e',
-          border: '1px solid #333',
-          borderRadius: '8px',
-          color: '#e0e0e0',
-          cursor: 'pointer',
-          fontSize: '0.9rem',
-          boxShadow: isOpen ? '0 0 0 2px rgba(59, 130, 246, 0.5)' : '0 2px 5px rgba(0,0,0,0.2)',
-          outline: 'none'
-        }}
+        className={`lang-select-btn ${isOpen ? 'active' : ''}`}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '1.1rem' }}>{selectedLang.icon}</span>
-          <span style={{ fontWeight: 500, fontFamily: '"Fira Code", monospace' }}>{selectedLang.name}</span>
+        <div className="lang-selected">
+          <span className="lang-icon">{selectedLang.icon}</span>
+          <span className="lang-name">{selectedLang.name}</span>
         </div>
         <motion.span
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
-          style={{ fontSize: '0.7rem', opacity: 0.7 }}
+          className="lang-arrow"
         >
           ▼
         </motion.span>
@@ -67,19 +53,7 @@ const LanguageSelector = ({ currentLanguage, onLanguageChange }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              marginTop: '8px',
-              backgroundColor: '#1e1e1e',
-              border: '1px solid #333',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-              zIndex: 100
-            }}
+            className="lang-dropdown"
           >
             {languages.map((lang) => (
               <motion.div
@@ -88,25 +62,15 @@ const LanguageSelector = ({ currentLanguage, onLanguageChange }) => {
                   onLanguageChange(lang.id);
                   setIsOpen(false);
                 }}
-                whileHover={{ backgroundColor: '#2d2d2d', x: 2 }}
-                style={{
-                  padding: '10px 12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  cursor: 'pointer',
-                  backgroundColor: currentLanguage === lang.id ? 'rgba(59, 130, 246, 0.1)' : 'rgba(0, 0, 0, 0)',
-                  color: currentLanguage === lang.id ? '#60a5fa' : '#a0a0a0',
-                  transition: 'color 0.2s',
-                  borderLeft: currentLanguage === lang.id ? '3px solid #60a5fa' : '3px solid rgba(0, 0, 0, 0)'
-                }}
+                className={`lang-option ${currentLanguage === lang.id ? 'selected' : ''}`}
+                whileHover={{ x: 2 }}
               >
-                <span style={{ fontSize: '1.1rem' }}>{lang.icon}</span>
-                <span style={{ fontFamily: '"Fira Code", monospace', fontSize: '0.9rem' }}>{lang.name}</span>
+                <span className="lang-icon">{lang.icon}</span>
+                <span className="lang-name">{lang.name}</span>
                 {currentLanguage === lang.id && (
                   <motion.div
                     layoutId="activeCheck"
-                    style={{ marginLeft: 'auto', fontSize: '0.8rem' }}
+                    className="lang-check"
                   >
                     ✓
                   </motion.div>
