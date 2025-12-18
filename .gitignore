@@ -52,3 +52,4 @@ backend/gradle/
 *.key.env.production
 .env.production
 ssh-key-2025-12-03.key
+temp_env

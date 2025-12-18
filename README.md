@@ -1,5 +1,7 @@
 # 🧞‍♂️ CodeGenie (코드지니) - 사고력을 키우는 AI 코딩 멘토
 
+> **🚀 Live Demo**: [https://hurdong.github.io/CodeGenie/](https://hurdong.github.io/CodeGenie/)
+
 ## 📌 프로젝트 비전 (Project Vision)
 
 ### **"정답만 알려주는 AI는 이제 그만! 🚫"**
@@ -18,34 +20,29 @@ ChatGPT와 같은 일반적인 LLM과 달리, **CodeGenie**는 다음과 같은 
 
 ## 🚀 주요 기능 (Key Features)
 
-### 1️⃣ 🧪 반례 생성 (Counterexample Mode)
+### 1️⃣ 🧪 AI 멘토링 (AI Mentoring)
 **"내 코드가 왜 틀렸지?"** 🤔 고민될 때, 통과하지 못하는 결정적인 **반례**를 제시합니다.
-- 📉 **엣지 케이스 탐색**: 최소/최대값, 빈 값(Null), 중복 값, 경계값 등 놓치기 쉬운 함정을 발견합니다.
-- 🧐 **논리적 오류 지적**: "이 입력에서는 왜 실패하는지"에 대한 명쾌한 논리적 이유를 설명합니다.
+- **반례 모드 (Counterexample)**: 엣지 케이스(최소/최대값, Null 등)를 찾아내고 논리적 오류를 지적합니다.
+- **풀이 모드 (Solution)**: 문제의 핵심을 요약하고, 최적의 알고리즘을 제안하며, 3단계 힌트로 정답을 유도합니다. (정답 코드는 마지막에만 공개!)
 
-### 2️⃣ 🧩 단계별 풀이 (Solution Mode)
-막막한 문제 앞에서 **해결 전략**을 단계별로 안내합니다.
-- 📝 **핵심 요약**: 문제의 핵심 목표와 절대 어겨선 안 될 제약 조건을 요약해줍니다.
-- ⚖️ **알고리즘 제안**: 시간 복잡도와 데이터 범위를 고려하여 **최적의 알고리즘 후보**를 추천합니다.
-- 👣 **단계적 힌트**: **Step 1 → Step 2 → Step 3**로 이어지는 사고의 흐름을 가이드합니다.
-- ⏳ **정답 지연 (No Spoilers)**: 여러분이 "정말 모르겠어요!"라고 외치기 전까지는 코드를 숨겨둡니다.
+### 2️⃣ 📊 대시보드 (Dashboard)
+나의 학습 현황을 한눈에 파악하세요.
+- **학습 통계**: 현재 랭크(Bronze ~ Ruby), 레벨, 경험치를 시각적으로 확인합니다.
+- **스트릭(Streak)**: 매일매일의 학습 기록을 잔디 심기🌱로 관리합니다.
 
-### 3️⃣ 🏗️ 문제 이해 및 구조화 (Problem Understanding)
-- 📥 **RAW Text 파싱**: 복잡한 문제 지문을 **`ProblemSpec`**과 **`ProblemUnderstanding`** 구조로 깔끔하게 변환합니다.
-- 🎯 **명확한 목표 설정**:
-    - **Goal**: 무엇을 구해야 하는가?
-    - **KeyVar**: 입력 변수의 의미와 범위는?
-    - **Output**: 출력 형식은?
-    - **Constraints**: 시간/메모리 제약은?
+### 3️⃣ 🕰️ 히스토리 (History)
+과거의 멘토링 세션을 언제든 복습할 수 있습니다.
+- **복습 기능**: 이전에 나누었던 대화 내용과 코드를 다시 확인하며 부족한 점을 보완합니다.
 
 ---
 
 ## 🛠️ 기술 스택 (Tech Stack)
 
-### 🎨 Frontend
+### 🎨 Frontend (Web & Mobile)
 - **Framework**: ⚛️ React 19
 - **Build Tool**: ⚡ Vite
-- **Styling**: 💅 Vanilla CSS (Modern), ✨ GSAP (Animations)
+- **Mobile**: 📱 Capacitor (Android Support)
+- **Styling**: 💅 Vanilla CSS (Modern), ✨ GSAP & Framer Motion (Animations)
 - **Language**: 💛 JavaScript (ESNext)
 
 ### ⚙️ Backend (Architecture Design)
@@ -56,19 +53,12 @@ ChatGPT와 같은 일반적인 LLM과 달리, **CodeGenie**는 다음과 같은 
 
 ---
 
-## 💡 핵심 원칙 (Core Principles)
+## 📚 상세 문서 (Documentation)
 
-1.  **🤖 LLM is Always Stateless**
-    - 모든 AI 호출은 독립적입니다. 이전 대화의 기억(Context)은 **백엔드(Redis)**가 안전하게 관리하고 주입합니다.
-
-2.  **🏛️ Server is the Source of Truth**
-    - 문제의 상태, 세션 정보, 이해도 데이터의 **진실(Truth)**은 오직 서버에만 있습니다. AI는 이를 바탕으로 판단할 뿐입니다.
-
-3.  **🎓 No Immediate Answers (정답 지연)**
-    - 여러분의 **성장**이 최우선입니다. 정답 코드는 `SOLUTION` 모드의 **마지막 단계**에서, 여러분이 **원할 때만** 공개됩니다.
-
-4.  **💎 Consistency & Reliability**
-    - 모든 기능은 **"코딩 테스트 사고력 향상"**이라는 하나의 목표를 향해 일관성 있게 동작합니다.
+더 자세한 설계와 스펙이 궁금하시다면 아래 문서를 참고하세요:
+- [📄 API Specification](docs/api_spec.md): 백엔드 API 명세서
+- [🧠 Code Agent Constitution](docs/code-agent-spec.md): AI 에이전트 설계 원칙 및 데이터 모델
+- [🏗️ System Architecture](docs/ARCHITECTURE.md): 시스템 아키텍처 및 다이어그램
 
 ---
 
@@ -93,16 +83,18 @@ npm run dev
 ```
 브라우저에서 `http://localhost:5173`으로 접속하여 **CodeGenie**를 만나보세요! ✨
 
-### 4. 백엔드 및 인프라 실행 (Docker) 🐳
-백엔드(Spring Boot)와 Redis는 Docker Compose를 통해 쉽게 실행할 수 있습니다.
-
+### 4. 배포 (Deployment) ☁️
+GitHub Pages에 배포하려면 다음 명령어를 실행하세요:
 ```bash
-docker-compose up -d --build
+npm run deploy
 ```
-- **Backend API**: `http://localhost:8080`
-- **Redis**: `localhost:6379`
 
-프론트엔드 개발 서버(`npm run dev`)는 자동으로 `/api` 요청을 로컬 Docker 백엔드로 프록시합니다.
+### 5. 모바일 빌드 (Android) 🤖
+Capacitor를 사용하여 안드로이드 앱으로 빌드할 수 있습니다.
+```bash
+npx cap sync
+npx cap open android
+```
 
 ---
 
