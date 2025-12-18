@@ -31,7 +31,7 @@ graph TD
     end
     
     subgraph Infrastructure [🗄️ 인프라]
-        DB[("🛢️ RDBMS (Oracle/MySQL)")]
+        DB[("🍃 MongoDB (NoSQL)")]
         Redis[("⚡ Redis (Session/Context)")]
     end
     
