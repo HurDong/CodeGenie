@@ -9,43 +9,43 @@
 ```mermaid
 graph TD
     %% Nodes
-    User[👤 사용자]
+    User["👤 사용자"]
     
     subgraph Client [🎨 프론트엔드 클라이언트]
-        Web[🖥️ 웹 앱 (React + Vite)]
-        Mobile[📱 모바일 앱 (Capacitor)]
+        Web["🖥️ 웹 앱 (React + Vite)"]
+        Mobile["📱 모바일 앱 (Capacitor)"]
     end
     
     subgraph Server [⚙️ 백엔드 (Spring Boot)]
-        API[🚪 API 게이트웨이 / 컨트롤러]
-        Service[🧠 비즈니스 로직 / 서비스 계층]
+        API["🚪 API 게이트웨이 / 컨트롤러"]
+        Service["🧠 비즈니스 로직 / 서비스 계층"]
         
         subgraph Core_Services [핵심 서비스]
-            ChatSvc[💬 채팅 서비스]
-            ProbSvc[🏗️ 문제 서비스]
-            DashboardSvc[📊 대시보드 서비스]
-            AuthSvc[🔐 인증 서비스]
+            ChatSvc["💬 채팅 서비스"]
+            ProbSvc["🏗️ 문제 서비스"]
+            DashboardSvc["📊 대시보드 서비스"]
+            AuthSvc["🔐 인증 서비스"]
         end
         
-        Repo[💾 리포지토리 계층]
+        Repo["💾 리포지토리 계층"]
     end
     
     subgraph Infrastructure [🗄️ 인프라]
-        DB[(🛢️ RDBMS (Oracle/MySQL))]
-        Redis[(⚡ Redis (Session/Context))]
+        DB[("🛢️ RDBMS (Oracle/MySQL)")]
+        Redis[("⚡ Redis (Session/Context)")]
     end
     
     subgraph External [🌍 외부 서비스]
-        OpenAI[🤖 OpenAI API (LLM)]
-        Baekjoon[algo 백준]
-        Programmers[algo 프로그래머스]
+        OpenAI["🤖 OpenAI API (LLM)"]
+        Baekjoon["algo 백준"]
+        Programmers["algo 프로그래머스"]
     end
 
     %% Edge connections
     User --> Web
     User --> Mobile
-    Web -- HTTPS/JSON --> API
-    Mobile -- HTTPS/JSON --> API
+    Web -- "HTTPS/JSON" --> API
+    Mobile -- "HTTPS/JSON" --> API
     
     API --> Service
     
@@ -54,9 +54,9 @@ graph TD
     Service --> DashboardSvc
     Service --> AuthSvc
     
-    ChatSvc -- 프롬프트 생성 --> OpenAI
-    ProbSvc -- 크롤링/파싱 --> Baekjoon
-    ProbSvc -- 크롤링/파싱 --> Programmers
+    ChatSvc -- "프롬프트 생성" --> OpenAI
+    ProbSvc -- "크롤링/파싱" --> Baekjoon
+    ProbSvc -- "크롤링/파싱" --> Programmers
     
     ChatSvc --> Redis
     Service --> Repo --> DB
