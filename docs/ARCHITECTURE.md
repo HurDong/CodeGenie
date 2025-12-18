@@ -11,16 +11,16 @@ graph TD
     %% Nodes
     User[👤 User]
     
-    subgraph Client [🎨 Frontend (Client)]
+    subgraph Client ["🎨 Frontend (Client)"]
         Web[🖥️ Web App (React + Vite)]
         Mobile[📱 Mobile App (Capacitor)]
     end
     
-    subgraph Server [⚙️ Backend (Spring Boot)]
+    subgraph Server ["⚙️ Backend (Spring Boot)"]
         API[🚪 API Gateway / Controller]
         Service[🧠 Business Logic / Service Layer]
         
-        subgraph Core_Services
+        subgraph Core_Services ["Core Services"]
             ChatSvc[💬 Chat Service]
             ProbSvc[🏗️ Problem Service]
             DashboardSvc[📊 Dashboard Service]
@@ -30,12 +30,12 @@ graph TD
         Repo[💾 Repository Layer]
     end
     
-    subgraph Infrastructure [🗄️ Infrastructure]
+    subgraph Infrastructure ["🗄️ Infrastructure"]
         DB[(🛢️ RDBMS (Oracle/MySQL))]
         Redis[(⚡ Redis (Session/Context))]
     end
     
-    subgraph External [🌍 External Services]
+    subgraph External ["🌍 External Services"]
         OpenAI[🤖 OpenAI API (LLM)]
         Baekjoon[algo Baekjoon]
         Programmers[algo Programmers]
