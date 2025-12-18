@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Hero from './components/Hero';
 import Features from './components/Features';
 import Process from './components/Process';
@@ -88,45 +89,47 @@ const LandingPage = () => {
 function App() {
   return (
     <AuthProvider>
-      <Router basename={import.meta.env.BASE_URL}>
-        <div className="App">
-          <Toaster
-            position="top-center"
-            containerStyle={{
-              zIndex: 99999,
-            }}
-            toastOptions={{
-              style: {
-                background: '#1e293b',
-                color: '#fff',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+      <ThemeProvider>
+        <Router basename={import.meta.env.BASE_URL}>
+          <div className="App">
+            <Toaster
+              position="top-center" // ... (truncated for brevity in thought, but full content will be in tool call)
+              containerStyle={{
+                zIndex: 99999,
+              }}
+              toastOptions={{
+                style: {
+                  background: 'var(--nav-bg)',
+                color: 'var(--text-color)',
+                border: '1px solid var(--glass-border)',
                 maxWidth: '500px',
                 wordBreak: 'keep-all',
-              },
-              success: {
-                iconTheme: {
-                  primary: '#10b981',
-                  secondary: '#fff',
                 },
-              },
-              error: {
-                iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#fff',
+                success: {
+                  iconTheme: {
+                    primary: '#10b981',
+                    secondary: '#fff',
+                  },
                 },
-              },
-            }}
-          />
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            {/* <Route path="/monimo" element={<MonimoLandingPage />} /> - Removed per user request */}
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/ai-mentoring" element={<AiMentoringPage />} />
-            <Route path="/history" element={<HistoryPage />} />
-            <Route path="/oauth/callback" element={<OAuthCallback />} />
-          </Routes>
-        </div>
-      </Router>
+                error: {
+                  iconTheme: {
+                    primary: '#ef4444',
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              {/* <Route path="/monimo" element={<MonimoLandingPage />} /> - Removed per user request */}
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/ai-mentoring" element={<AiMentoringPage />} />
+              <Route path="/history" element={<HistoryPage />} />
+              <Route path="/oauth/callback" element={<OAuthCallback />} />
+            </Routes>
+          </div>
+        </Router>
+      </ThemeProvider>
     </AuthProvider>
   );
 }
