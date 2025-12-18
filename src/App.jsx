@@ -99,9 +99,9 @@ function App() {
               }}
               toastOptions={{
                 style: {
-                  background: 'var(--nav-bg)',
-                color: 'var(--text-color)',
-                border: '1px solid var(--glass-border)',
+                  background: 'var(--toast-bg)',
+                  color: 'var(--toast-text)',
+                  border: '1px solid var(--toast-border)',
                 maxWidth: '500px',
                 wordBreak: 'keep-all',
                 },

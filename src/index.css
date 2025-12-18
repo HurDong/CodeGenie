@@ -61,6 +61,11 @@
   --text-secondary: #94a3b8;
   --grid-color: rgba(255, 255, 255, 0.03);
   --stat-item-bg: rgba(30, 41, 59, 0.5);
+
+  /* Toast - Dark for contrast against white navbar */
+  --toast-bg: #1e293b; 
+  --toast-text: #f1f5f9;
+  --toast-border: rgba(255, 255, 255, 0.1);
 }
 
 [data-theme='light'] {
@@ -128,6 +133,11 @@
   --prism-number: #005cc5;
   --prism-class: #6f42c1;
   --prism-variable: #e36209;
+
+  /* Toast - Dark in Light mode too for visibility */
+  --toast-bg: #334155;
+  --toast-text: #f8fafc;
+  --toast-border: transparent;
 }
 
 html {
