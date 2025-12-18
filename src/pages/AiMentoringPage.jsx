@@ -158,6 +158,24 @@ const AiMentoringPage = () => {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   const messagesEndRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowCategoryDropdown(false);
+      }
+    };
+
+    if (showCategoryDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showCategoryDropdown]);
 
 
 
@@ -850,13 +868,14 @@ int solution(int num1, int num2) {
             {activeChatId && (
               <div className="chat-header-glass">
                 <div className="header-left">
-                  <div className="category-badge-wrapper">
+                  <div className="category-badge-wrapper" ref={dropdownRef}>
                      <div 
                         className="category-badge-glass"
                         style={{ 
                           color: CATEGORIES[activeChat?.category || 'etc']?.color,
                           borderColor: `${CATEGORIES[activeChat?.category || 'etc']?.color}40`,
-                          backgroundColor: `${CATEGORIES[activeChat?.category || 'etc']?.color}15`
+                          backgroundColor: `${CATEGORIES[activeChat?.category || 'etc']?.color}15`,
+                          position: 'relative'
                         }}
                         onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
                      >
@@ -872,7 +891,10 @@ int solution(int num1, int num2) {
                             <button
                               key={key}
                               className={`dropdown-item ${activeChat?.category === key ? 'active' : ''}`}
-                              onClick={() => handleUpdateCategory(key)}
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent bubbling
+                                handleUpdateCategory(key);
+                              }}
                               style={{ color: activeChat?.category === key ? '#fff' : color }}
                             >
                               <span style={{ width: '20px' }}>{icon}</span>
@@ -880,13 +902,6 @@ int solution(int num1, int num2) {
                             </button>
                           ))}
                        </div>
-                     )}
-                     {/* Overlay to close on click outside */}
-                     {showCategoryDropdown && (
-                        <div 
-                          style={{ position: 'fixed', top:0, left:0, width:'100vw', height:'100vh', zIndex: 104 }}
-                          onClick={() => setShowCategoryDropdown(false)}
-                        />
                      )}
                   </div>
                   <div className="chat-title-wrapper">
