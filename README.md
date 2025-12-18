@@ -81,7 +81,7 @@ npm install
 ```bash
 npm run dev
 ```
-브라우저에서 `http://localhost:5173`으로 접속하여 **CodeGenie**를 만나보세요! ✨
+브라우저에서 `http://localhost:3000`으로 접속하여 **CodeGenie**를 만나보세요! ✨
 
 ### 4. 배포 (Deployment) ☁️
 GitHub Pages에 배포하려면 다음 명령어를 실행하세요:
