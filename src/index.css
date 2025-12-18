@@ -14,10 +14,14 @@
   --glass-bg: rgba(30, 41, 59, 0.7);
   --glass-border: rgba(255, 255, 255, 0.1);
 
-  /* Navbar */
-  --nav-bg: rgba(15, 23, 42, 0.9);
+  /* Navbar - Inverted for Contrast */
+  --nav-bg: rgba(255, 255, 255, 0.95); /* Light Navbar in Dark Mode */
   --nav-border: rgba(255, 255, 255, 0.1);
-  --nav-text: #f1f5f9;
+  --nav-text: #0f172a; /* Dark Text */
+
+  /* Chat Header - Dark in Dark Mode */
+  --chat-header-bg: rgba(15, 23, 42, 0.9);
+  --chat-header-text: #f1f5f9;
   
   /* Chat Bubble */
   --chat-bubble-bg: #1e293b;
@@ -69,10 +73,14 @@
   --glass-bg: rgba(255, 255, 255, 0.8);
   --glass-border: rgba(0, 0, 0, 0.1);
 
-  /* Navbar */
+  /* Navbar - Bright/Clean */
   --nav-bg: #ffffff;
   --nav-border: #e2e8f0;
   --nav-text: #334155;
+
+  /* Chat Header - Light in Light Mode */
+  --chat-header-bg: #ffffff;
+  --chat-header-text: #0f172a;
 
   /* Chat Bubble */
   --chat-bubble-bg: #f1f5f9;

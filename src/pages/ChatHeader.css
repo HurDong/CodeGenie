@@ -9,7 +9,7 @@
   padding: 20px 32px;
   min-height: 84px;
   /* Deep Cosmic Gradient (Reversed) - Adapted for Theme */
-  background: var(--nav-bg);
+  background: var(--chat-header-bg);
   /* Neon Glow Border */
   border-bottom: 1px solid var(--nav-border);
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 0 15px -3px rgba(59, 130, 246, 0.15);
@@ -43,6 +43,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
+  color: var(--chat-header-text);
 }
 
 .category-badge-glass:hover {
@@ -92,7 +93,7 @@
   padding: 10px 12px;
   border-radius: 8px;
   background: transparent;
-  color: var(--text-color);
+  color: var(--chat-header-text);
   border: none;
   cursor: pointer;
   font-size: 0.85rem;
@@ -103,7 +104,7 @@
 
 .dropdown-item:hover {
   background: var(--glass-border);
-  color: var(--text-color);
+  color: var(--chat-header-text);
 }
 
 .dropdown-item.active {
@@ -126,7 +127,7 @@
   border: none;
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--text-color);
+  color: var(--chat-header-text);
   width: 350px;
   text-overflow: ellipsis;
   cursor: pointer;
