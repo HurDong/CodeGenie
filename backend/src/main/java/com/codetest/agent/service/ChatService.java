@@ -19,9 +19,11 @@ import org.jsoup.nodes.Element;
 @RequiredArgsConstructor
 public class ChatService {
 
+    // --- Injected dependencies ---
     private final ConversationRepository conversationRepository;
     private final LlmService llmService;
-    private final CodeExecutionService codeExecutionService; // Newly added
+    private final CodeExecutionService codeExecutionService;
+    private final com.codetest.agent.service.guardrail.GuardrailService guardrailService; // Injected
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
 
     public Conversation startChat(String mode, String problemText, String userCode, String title, String userId) {
@@ -59,15 +61,25 @@ public class ChatService {
         Message userMessage = new Message("user", content, LocalDateTime.now());
         conversation.getMessages().add(userMessage);
 
+        /**
+         * [GUARDRAIL STEP]
+         * Validate using external GuardrailService (supports Hybrid AI switching).
+         */
+        var validation = guardrailService.validate(conversation.getMode(), content);
+        if (!validation.allowed()) {
+            // Guardrail triggered: Return refusal immediately
+            Message refusalMsg = new Message("assistant", validation.refusalMessage(), LocalDateTime.now());
+            conversation.getMessages().add(refusalMsg);
+            conversation.setUpdatedAt(LocalDateTime.now());
+            conversationRepository.save(conversation);
+            return refusalMsg;
+        }
+
         // Build Chat Messages
         List<Map<String, Object>> messages = new ArrayList<>();
 
         // 1. System Prompt
-        String source = null;
-        if (conversation.getProblemSpec() != null) {
-            source = conversation.getProblemSpec().getSource();
-        }
-        String systemPrompt = getSystemPrompt(conversation.getMode(), source);
+        String systemPrompt = getSystemPrompt(conversation);
         if ("solution".equalsIgnoreCase(conversation.getMode()) && conversation.getStrategy() != null) {
             systemPrompt += "\n\n[CURRENT STRATEGY ANCHOR]\n" +
                     "Your agreed-upon strategy is: \"" + conversation.getStrategy() + "\"\n" +
@@ -339,128 +351,15 @@ public class ChatService {
         }
     }
 
-    private String getSystemPrompt(String mode, String source) {
-        if ("understanding_summary".equalsIgnoreCase(mode) || "understanding".equalsIgnoreCase(mode)) {
-            return "You are a 'Problem Summary Expert'.\n" +
-                    "The user is overwhelmed by the problem description.\n" +
-                    "[Guidelines]\n" +
-                    "1. Skip the background story.\n" +
-                    "2. **Input**: Clearly list what is given (e.g., Array of N integers).\n" +
-                    "3. **Output**: Define exactly what needs to be calculated in one sentence.\n" +
-                    "4. **Constraints**: Mention only key constraints (Time, Range) that affect the solution.\n" +
-                    "5. ⚠️ **PROHIBITED**: Do NOT mention any algorithms, data structures, or solution methods. Focus ONLY on problem definition.\n"
-                    +
-                    "Answer in Korean.";
-        } else if ("understanding_trace".equalsIgnoreCase(mode)) {
-            return "You are an 'Example Simulator'.\n" +
-                    "The user does not understand why the example input leads to the output.\n" +
-                    "[Guidelines]\n" +
-                    "0. **CRITICAL**: Ignore any user code provided. Focus ONLY on the problem description and examples.\n"
-                    +
-                    "1. Select Example 1 provided by the problem.\n" +
-                    "2. Trace the process **Step-by-step** as if calculating by hand.\n" +
-                    "3. Visualize variable changes or state transitions using a **Table** or **List**.\n" +
-                    "   - Step 1: Current=0, Input=5 -> Sum=5\n" +
-                    "4. Explain which rule from the problem description was applied at each step.\n" +
-                    "5. ⚠️ **PROHIBITED**: Do NOT use algorithm terms like 'DP', 'BFS', 'Greedy'. Do NOT explain 'how to solve'. Just show 'what happens'.\n"
-                    +
-                    "Answer in Korean.";
-        } else if ("understanding_hint".equalsIgnoreCase(mode)) {
-            return "You are an 'Algorithm Mentor'.\n" +
-                    "The user understands the problem but has no idea how to solve it.\n" +
-                    "[Guidelines]\n" +
-                    "1. **Algorithm Recommendation**: Suggest suitable algorithms (e.g., BFS, Binary Search, Greedy).\n"
-                    +
-                    "2. **Reasoning**: Explain WHY based on **Constraints (Time Complexity)**.\n" +
-                    "   - 'Since N is 100,000, O(N^2) is impossible. Use O(NlogN) sorting.'\n" +
-                    "3. **Key Idea**: Provide the decisive idea for the solution in one sentence.\n" +
-                    "Answer in Korean.";
-        } else if ("solution".equalsIgnoreCase(mode)) {
-            return "You are CodeGenie, a helpful AI coding mentor specialized in 'Feasibility Check & Guidance'.\n" +
-                    "Your goal is to validate the user's approach and guide them to the correct solution.\n" +
-                    "[Guidelines]\n" +
-                    "1. **Analyze User Code**: Deeply understand the `[User Code]` and the user's intended logic.\n" +
-                    "2. **Feasibility Check**: Determine if the user's approach can solve the problem within constraints (Time/Memory).\n"
-                    +
-                    "3. **Conditional Guidance**:\n" +
-                    "   - **If Valid**: Acknowledge the good approach and suggest the **immediate next step**.\n" +
-                    "   - **If Invalid**: Explain **why** it fails (e.g., 'O(N^2) leads to Time Limit Exceeded') and propose the **first step** of a correct approach.\n"
-                    +
-                    "4. **Code Generation Rule**: \n" +
-                    "   - If the user requests code or implementation for a specific step (N), you **MAY** provide the code.\n"
-                    +
-                    "   - **Constraint**: Provide the code **cumulative from Step 1 up to Step N**. \n" +
-                    "   - ⚠️ **PROHIBITED**: Do NOT provide the full solution (steps N+1, N+2...) in advance.\n"
-                    +
-                    "\n" +
-                    "[Output Format]\n" +
-                    "1. **코드 분석 및 타당성 (Analysis & Feasibility)**: Evaluate the user's logic and validity.\n" +
-                    "2. **가이드 (Guidance)**: \n" +
-                    "   - (Valid): 'Next, implement the BFS queue...'\n" +
-                    "   - (Invalid): 'Since N=100k, we need O(NlogN). Let's use Sorting...'\n" +
-                    "3. **의사 코드 (Pseudocode)**: Show the logic in pseudocode for the suggested step.\n" +
-                    "- Answer in Korean.";
-        } else if ("counterexample".equalsIgnoreCase(mode)) {
-            if ("PROGRAMMERS".equalsIgnoreCase(source)) {
-                return "You are a 'Test Case Generator' for Programmers problems.\n" +
-                        "The user wants to verify their code against counterexamples. Code runs as a Solution class method.\n"
-                        +
-                        "Your goal is to generate 5 robust test cases in JSON format.\n" +
-                        "[Process]\n" +
-                        "1. **Analyze Function Signature**: Identify the parameters from the problem description.\n" +
-                        "2. **Draft 5 Inputs**: 1 Basic, 2 Edge, 2 Random. \n" +
-                        "   - Format: Inputs must be comma-separated values matching the function arguments.\n" +
-                        "   - Example for solution(int n, int k): \"10, 3\"\n" +
-                        "   - Example for solution(int[] arr): \"[1, 2, 3]\"\n" +
-                        "3. **Compute Correct Output**: For the constructed input.\n" +
-                        "4. Output STRICT JSON only. No markdown.\n" +
-                        "\n" +
-                        "[JSON Format]\n" +
-                        "[\n" +
-                        "  {\"input\": \"10, 3\", \"expected\": \"20480\"}, \n" +
-                        "  {\"input\": \"5, 0\", \"expected\": \"0\"}\n" +
-                        "]\n" +
-                        "(Note: Do NOT include Test Case Count (T). Just the parameter values.)";
-            } else {
-                return "You are a 'Test Case Generator'.\n" +
-                        "The user wants to verify their code against counterexamples.\n" +
-                        "Your goal is to generate 5 robust test cases in JSON format.\n" +
-                        "[Process]\n" +
-                        "1. **Analyze Input Format**: Check if the problem requires a 'Test Case Count' (T) at the start.\n"
-                        +
-                        "   - If YES (e.g., 'First line is T'), your 'input' string MUST start with '1\\n' (representing 1 test case) followed by the actual input.\n"
-                        +
-                        "   - Failing to do this will cause `NoSuchElementException` in user code.\n" +
-                        "2. **Draft 5 Inputs**: 1 Basic, 2 Edge, 2 Random.\n" +
-                        "3. **Compute Correct Output**: For the constructed input.\n" +
-                        "4. Output STRICT JSON only. No markdown.\n" +
-                        "\n" +
-                        "[JSON Format]\n" +
-                        "[\n" +
-                        "  {\"input\": \"1\\n5\", \"expected\": \"44\"}, \n" +
-                        "  {\"input\": \"1\\n1\", \"expected\": \"1\"}\n" +
-                        "]\n" +
-                        "(Note: If problem does NOT ask for T, just send \"5\" or \"1\".)";
-            }
-        } else if ("debugging".equalsIgnoreCase(mode)) {
-            return "You are CodeGenie, a helpful AI coding mentor specialized in 'Strategic Debugging'.\n" +
-                    "The user wants to know WHERE and HOW to debug their code.\n" +
-                    "[Guidelines]\n" +
-                    "1. **No Vague Advice**: Do NOT say 'Check the loop' or 'Use print'. Show EXACTLY where to put the print statement.\n"
-                    +
-                    "2. **Show Code**: \n" +
-                    "   - Identify the most critical state changes (loops, recursion, dp updates).\n" +
-                    "   - Provide a code snippet with **Print Statements Inserted**.\n" +
-                    "   - Use specific formatting: `Java: System.out.println(\"[DEBUG] i=\" + i + \", dp=\" + dp[i]);`\n"
-                    +
-                    "3. **Analyze Output**: Explain what the user should look for in the console output (e.g., 'If [DEBUG] shows -1, your initialization is wrong').\n"
-                    +
-                    "Answer in Korean.";
-        } else {
-            return "You are CodeGenie, a helpful AI coding mentor.\n" +
-                    "Help the user with their coding problem.\n" +
-                    "Answer in Korean.";
-        }
+    private final List<com.codetest.agent.strategy.prompt.PromptStrategy> promptStrategies;
+
+    private String getSystemPrompt(Conversation conversation) {
+        return promptStrategies.stream()
+                .filter(strategy -> strategy.supports(conversation.getMode()))
+                .findFirst()
+                .map(strategy -> strategy.getSystemPrompt(conversation))
+                .orElseThrow(() -> new IllegalStateException(
+                        "No suitable prompt strategy found for mode: " + conversation.getMode()));
     }
 
     private String buildContextString(Conversation conversation) {
@@ -492,7 +391,11 @@ public class ChatService {
             sb.append("Problem: ").append(conversation.getProblemText()).append("\n");
         }
 
-        if (conversation.getUserCode() != null && !conversation.getUserCode().isEmpty()) {
+        // Context Isolation: Do NOT send user code for 'Understanding' modes.
+        // This prevents the LLM from hallucinating debugging behavior when it should be
+        // focusing on the problem.
+        boolean isUnderstandingMode = conversation.getMode().toLowerCase().startsWith("understanding");
+        if (!isUnderstandingMode && conversation.getUserCode() != null && !conversation.getUserCode().isEmpty()) {
             sb.append("\n[User Code]\n").append(conversation.getUserCode()).append("\n");
         }
 
