@@ -140,6 +140,7 @@ sequenceDiagram
     participant API as Backend API
     participant Chat as ChatService
     participant LLM as OpenAI Service
+    participant Guard as 🛡️ IntentGuard
     participant Redis as Redis/DB
 
     User->>FE: 1. 문제 URL 입력 & 모드 선택 (SOLUTION)
@@ -152,9 +153,20 @@ sequenceDiagram
     Chat->>Redis: Save Initial Context
     API-->>FE: Conversation Created
     
-    User->>FE: 3. "어떻게 풀어야 해?"
+    User->>FE: 3. "디버깅 좀 해줘" (잘못된 요청)
     FE->>API: POST /api/chat/message
     API->>Chat: sendMessage(msg)
+    
+    Chat->>Guard: validateUserIntent(Mode, Msg)
+    Guard-->>Chat: {allowed: false, reason: "Mode Mismatch"}
+    Chat-->>API: Return Refusal Message ("디버깅 탭을 이용하세요")
+    API-->>FE: Display Refusal (LLM Call Skipped)
+
+    User->>FE: 4. "어떻게 풀어야 해?" (올바른 요청)
+    FE->>API: POST /api/chat/message
+    API->>Chat: sendMessage(msg)
+    Chat->>Guard: validateUserIntent(Mode, Msg)
+    Guard-->>Chat: {allowed: true}
     
     Chat->>Redis: Load Context (Problem + History)
     Chat->>Chat: Build System Prompt (ROLE: Mentor)
@@ -164,6 +176,7 @@ sequenceDiagram
     Chat->>Redis: Save Message & Update History
     Chat-->>API: Return AI Message
     API-->>FE: Display Response
+
     
     User->>FE: 4. "알겠어, 코드는?"
     note right of User: CodeGenie는 바로 정답을 주지 않음
